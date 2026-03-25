@@ -40,7 +40,7 @@ The skill includes comprehensive patterns for:
 
 ### OpenStack Specific:
 - **Openstack Service**: Openstack service failures (Glance, Nova, Cinder, Manila)
-- **Keystone Auth**: Authentication/authorization issues  
+- **Keystone Auth**: Authentication/authorization issues
 - **Database**: Connection and SQL errors
 - **Network**: Neutron service problems
 

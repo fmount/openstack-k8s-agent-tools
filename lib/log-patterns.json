@@ -15,7 +15,7 @@
     {
       "name": "RBAC Permission Denied",
       "pattern": "forbidden|is forbidden|cannot.*verb|not allowed",
-      "severity": "high", 
+      "severity": "high",
       "category": "permissions",
       "description": "Insufficient RBAC permissions",
       "suggestions": [
@@ -133,7 +133,7 @@
     {
       "name": "Resource Created",
       "pattern": "created.*successfully|resource created",
-      "category": "success", 
+      "category": "success",
       "description": "Resource creation succeeded"
     },
     {
@@ -153,7 +153,7 @@
     {
       "name": "Queue Metrics",
       "pattern": "queue depth: ([0-9]+)|items in queue: ([0-9]+)",
-      "metric": "queue_depth", 
+      "metric": "queue_depth",
       "category": "performance"
     },
     {
@@ -177,7 +177,7 @@
       ]
     },
     {
-      "name": "Keystone Auth Error", 
+      "name": "Keystone Auth Error",
       "pattern": "keystone.*unauthorized|auth.*failed|invalid.*credentials",
       "severity": "high",
       "category": "openstack",

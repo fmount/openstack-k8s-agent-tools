@@ -77,7 +77,7 @@ check_kubeconfig
 # Operator discovery
 get_operator_pods
 
-# Deployment analysis  
+# Deployment analysis
 check_operator_deployment <name> [namespace]
 
 # Log pattern analysis
@@ -104,7 +104,7 @@ When in an operator directory (with Makefile and go.mod):
 # Focus on specific test
 /debug-operator focus-test "Checks the Topology"
 
-# Run only tests  
+# Run only tests
 /debug-operator test-only
 ```
 
@@ -131,7 +131,7 @@ I will automatically:
 
 The skill integrates with:
 - **openstack-k8s-operators** development practices
-- **lib-common** patterns and conventions  
+- **lib-common** patterns and conventions
 - **Ginkgo** testing framework workflows
 - **Controller-runtime** debugging patterns
 

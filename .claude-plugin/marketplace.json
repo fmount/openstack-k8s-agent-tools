@@ -1,5 +1,5 @@
 {
-  "name": "openstack-k8s-operators Operator Tools Marketplace", 
+  "name": "openstack-k8s-operators Operator Tools Marketplace",
   "description": "Marketplace for openstack-k8s-operators operator development and troubleshooting tools",
   "owner": {
     "name": "openstack-k8s-operators Development Team",
@@ -9,7 +9,7 @@
     {
       "name": "openstack-k8s-agent-tools",
       "description": "Comprehensive development and troubleshooting tools for openstack-k8s-operators (Red Hat OpenStack Services on OpenShift) operators. Provides systematic debugging workflows, code analysis, log pattern recognition, and development best practices with integration for openstack-k8s-operators conventions, Ginkgo testing framework, and gopls modernization patterns.",
-      "version": "0.1.0", 
+      "version": "0.1.0",
       "source": "https://github.com/openstack-k8s-operators/operator-tools",
       "author": {
         "name": "openstack-k8s-operators Development Team",

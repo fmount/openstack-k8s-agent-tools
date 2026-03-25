@@ -20,7 +20,7 @@ Based on gopls modernize and lib-common patterns:
 // ❌ Old style
 var items []string = []string{}
 
-// ✅ Modern style  
+// ✅ Modern style
 var items []string
 ```
 
@@ -116,7 +116,7 @@ var _ = Describe("Nova Controller", func() {
         BeforeEach(func() {
             // Setup
         })
-        
+
         It("Should create required resources", func() {
             // Test implementation
         })
@@ -165,7 +165,7 @@ The skill provides automated fixes for:
 # Run style analysis
 gopls check <file>
 
-# Apply modernization fixes  
+# Apply modernization fixes
 gopls fix -a fillstruct,unusedparam <file>
 
 # Check with golangci-lint

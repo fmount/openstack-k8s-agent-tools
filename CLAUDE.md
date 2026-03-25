@@ -171,7 +171,7 @@ npm run build
 ## Best Practices
 
 1. **Always verify pod status first** before diving into logs
-2. **Use grep patterns** to focus on relevant log entries  
+2. **Use grep patterns** to focus on relevant log entries
 3. **Check custom resource conditions** for operator state
 4. **Review Kubernetes events** for cluster-level issues
 5. **Follow reconciliation patterns** when analyzing controller logic

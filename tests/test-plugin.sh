@@ -19,10 +19,10 @@ TESTS_FAILED=0
 run_test() {
     local test_name="$1"
     local test_command="$2"
-    
+
     TESTS_RUN=$((TESTS_RUN + 1))
     echo -e "${BLUE}[TEST $TESTS_RUN] $test_name${NC}"
-    
+
     if eval "$test_command" &>/dev/null; then
         echo -e "${GREEN}  ✅ PASSED${NC}"
         TESTS_PASSED=$((TESTS_PASSED + 1))
@@ -37,14 +37,14 @@ run_test() {
 test_file_exists() {
     local file="$1"
     local description="$2"
-    
+
     run_test "$description" "[ -f '$file' ]"
 }
 
 test_executable() {
     local file="$1"
     local description="$2"
-    
+
     run_test "$description" "[ -x '$file' ]"
 }
 
@@ -52,7 +52,7 @@ test_executable() {
 test_json_valid() {
     local file="$1"
     local description="$2"
-    
+
     run_test "$description" "jq . '$file' >/dev/null 2>&1"
 }
 
@@ -60,7 +60,7 @@ test_json_valid() {
 test_node_script() {
     local script="$1"
     local description="$2"
-    
+
     run_test "$description" "node '$script' --help >/dev/null 2>&1"
 }
 
@@ -69,19 +69,19 @@ run_plugin_tests() {
     echo -e "${BLUE}🧪 openstack-k8s-operators Operator Tools Plugin Test Suite${NC}"
     echo "=========================================="
     echo
-    
+
     # Test plugin structure
     echo -e "${YELLOW}📂 Testing Plugin Structure${NC}"
     test_file_exists ".claude-plugin/plugin.json" "Plugin metadata exists"
     test_json_valid ".claude-plugin/plugin.json" "Plugin metadata is valid JSON"
-    
+
     # Test skills
     echo -e "\n${YELLOW}🎯 Testing Skills${NC}"
     test_file_exists "skills/debug-operator/SKILL.md" "Debug operator skill exists"
     test_file_exists "skills/explain-flow/SKILL.md" "Explain flow skill exists"
     test_file_exists "skills/plan-feature/SKILL.md" "Plan feature skill exists"
     test_file_exists "skills/analyze-logs/SKILL.md" "Analyze logs skill exists"
-    
+
     # Test lib helpers
     echo -e "\n${YELLOW}📦 Testing Lib${NC}"
     test_file_exists "lib/debug-helpers.sh" "Debug helpers exist"
@@ -102,7 +102,7 @@ run_plugin_tests() {
     echo -e "\n${YELLOW}📜 Testing Scripts${NC}"
     test_file_exists "scripts/install.sh" "Install script exists"
     test_executable "scripts/install.sh" "Install script is executable"
-    
+
     # Test documentation
     echo -e "\n${YELLOW}📚 Testing Documentation${NC}"
     test_file_exists "README.md" "README exists"
@@ -115,7 +115,7 @@ run_plugin_tests() {
 # Functional tests
 run_functional_tests() {
     echo -e "\n${YELLOW}⚙️  Testing Functionality${NC}"
-    
+
     # Test script help
     run_test "Install script help" "./scripts/install.sh --help >/dev/null 2>&1"
 
@@ -129,18 +129,18 @@ run_functional_tests() {
 # Plugin validation tests
 run_plugin_validation() {
     echo -e "\n${YELLOW}✅ Testing Plugin Validation${NC}"
-    
+
     # Check plugin.json structure
     if [ -f ".claude-plugin/plugin.json" ]; then
         local has_name=$(jq '.name' .claude-plugin/plugin.json 2>/dev/null)
         local has_version=$(jq '.version' .claude-plugin/plugin.json 2>/dev/null)
         local has_skills=$(jq '.skills' .claude-plugin/plugin.json 2>/dev/null)
-        
+
         run_test "Plugin has name field" "[ '$has_name' != 'null' ]"
         run_test "Plugin has version field" "[ '$has_version' != 'null' ]"
         run_test "Plugin has skills field" "[ '$has_skills' != 'null' ]"
     fi
-    
+
     # Check skill references
     if command -v jq >/dev/null 2>&1; then
         local skills=$(jq -r '.skills | keys[]' .claude-plugin/plugin.json 2>/dev/null)
@@ -154,7 +154,7 @@ run_plugin_validation() {
 # Performance tests
 run_performance_tests() {
     echo -e "\n${YELLOW}⚡ Testing Performance${NC}"
-    
+
     # Test script execution time
     local start_time=$(date +%s.%N)
     ./lib/dev-workflow.sh help >/dev/null 2>&1
@@ -172,12 +172,12 @@ run_performance_tests() {
 # Security tests
 run_security_tests() {
     echo -e "\n${YELLOW}🔒 Testing Security${NC}"
-    
+
     # Check for hardcoded secrets
     run_test "No hardcoded passwords" "! grep -r -i 'password.*=' . --include='*.js' --include='*.sh' --include='*.md'"
     run_test "No hardcoded tokens" "! grep -r -i 'token.*=' . --include='*.js' --include='*.sh' --include='*.md'"
     run_test "No hardcoded API keys" "! grep -r -i 'apikey.*=' . --include='*.js' --include='*.sh' --include='*.md'"
-    
+
     # Check file permissions
     run_test "Scripts have safe permissions" "find scripts/ -name '*.sh' -exec test '{}' -perm /o+w \\; -print | wc -l | grep -q '^0$'"
 }
@@ -185,10 +185,10 @@ run_security_tests() {
 # Integration tests
 run_integration_tests() {
     echo -e "\n${YELLOW}🔗 Testing Integration${NC}"
-    
+
     # Test install script check mode
     run_test "Install script check mode" "./scripts/install.sh --check >/dev/null 2>&1"
-    
+
     # Test plugin installation
     if [ -d "$HOME/.claude/plugins" ]; then
         run_test "Plugin can be installed" "./scripts/install.sh --claude-code >/dev/null 2>&1"
@@ -204,7 +204,7 @@ show_summary() {
     echo -e "Passed:       ${GREEN}${TESTS_PASSED}${NC}"
     echo -e "Failed:       ${RED}${TESTS_FAILED}${NC}"
     echo -e "Success rate: $(( TESTS_PASSED * 100 / TESTS_RUN ))%"
-    
+
     if [ $TESTS_FAILED -eq 0 ]; then
         echo -e "\n${GREEN}🎉 All tests passed!${NC}"
         exit 0
@@ -217,7 +217,7 @@ show_summary() {
 # Main execution
 main() {
     local test_type="${1:-all}"
-    
+
     case "$test_type" in
         "structure")
             run_plugin_tests
@@ -225,7 +225,7 @@ main() {
         "functional")
             run_functional_tests
             ;;
-        "validation") 
+        "validation")
             run_plugin_validation
             ;;
         "performance")
@@ -256,7 +256,7 @@ main() {
             exit 1
             ;;
     esac
-    
+
     show_summary
 }
 

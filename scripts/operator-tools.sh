@@ -25,15 +25,15 @@ check_kubeconfig() {
 quick_status() {
     echo -e "${BLUE}🔍 Quick openstack-k8s-operators Status Check${NC}"
     echo "================================"
-    
+
     check_kubeconfig || return 1
-    
+
     echo -e "\n${YELLOW}📋 openstack-k8s-operators Namespaces:${NC}"
     kubectl get ns | grep -E "(openstack|openstack-k8s-operators)" || echo "No openstack-k8s-operators namespaces found"
-    
+
     echo -e "\n${YELLOW}🏃 Operator Pods:${NC}"
     kubectl get pods -A -l 'app.kubernetes.io/component=manager' --no-headers 2>/dev/null | head -10 || echo "No operator pods found"
-    
+
     echo -e "\n${YELLOW}📜 openstack-k8s-operators CRDs:${NC}"
     kubectl get crd | grep -E "(openstack|openstack-k8s-operators)" | head -5 || echo "No openstack-k8s-operators CRDs found"
 }
@@ -42,19 +42,19 @@ quick_status() {
 watch_logs() {
     local operator_name="${1:-}"
     local namespace="${2:-openstack-operators}"
-    
+
     if [ -z "$operator_name" ]; then
         echo "Usage: watch_logs <operator-name> [namespace]"
         echo "Available operators:"
         kubectl get pods -A -l 'app.kubernetes.io/component=manager' --no-headers | awk '{print $2}' | sort -u
         return 1
     fi
-    
+
     check_kubeconfig || return 1
-    
+
     echo -e "${BLUE}📺 Watching logs for $operator_name in $namespace${NC}"
     echo "Press Ctrl+C to stop..."
-    
+
     kubectl logs -f "deployment/$operator_name" -n "$namespace" 2>/dev/null || \
     kubectl logs -f -l "app.kubernetes.io/name=$operator_name" -n "$namespace"
 }
@@ -62,15 +62,15 @@ watch_logs() {
 # Get operator resource usage
 resource_usage() {
     local namespace="${1:-openstack-operators}"
-    
+
     check_kubeconfig || return 1
-    
+
     echo -e "${BLUE}💾 Resource Usage in $namespace${NC}"
     echo "==================================="
-    
+
     echo -e "\n${YELLOW}Pod Resource Usage:${NC}"
     kubectl top pods -n "$namespace" 2>/dev/null || echo "Metrics server not available"
-    
+
     echo -e "\n${YELLOW}Pod Limits and Requests:${NC}"
     kubectl get pods -n "$namespace" -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.containers[0].resources.requests.cpu}{"\t"}{.spec.containers[0].resources.requests.memory}{"\t"}{.spec.containers[0].resources.limits.cpu}{"\t"}{.spec.containers[0].resources.limits.memory}{"\n"}{end}' | column -t
 }
@@ -79,12 +79,12 @@ resource_usage() {
 check_events() {
     local namespace="${1:-openstack-operators}"
     local hours="${2:-1}"
-    
+
     check_kubeconfig || return 1
-    
+
     echo -e "${BLUE}📅 Events in $namespace (last $hours hour(s))${NC}"
     echo "============================================="
-    
+
     kubectl get events -n "$namespace" \
         --sort-by='.lastTimestamp' \
         --field-selector="type!=Normal" \
@@ -95,40 +95,40 @@ check_events() {
 validate_deployment() {
     local operator_name="${1:-}"
     local namespace="${2:-openstack-operators}"
-    
+
     if [ -z "$operator_name" ]; then
         echo "Usage: validate_deployment <operator-name> [namespace]"
         return 1
     fi
-    
+
     check_kubeconfig || return 1
-    
+
     echo -e "${BLUE}✅ Validating deployment: $operator_name${NC}"
     echo "=========================================="
-    
+
     # Check deployment exists
     if ! kubectl get deployment "$operator_name" -n "$namespace" &>/dev/null; then
         echo -e "${RED}❌ Deployment $operator_name not found in $namespace${NC}"
         return 1
     fi
-    
+
     # Check deployment status
     local ready_replicas=$(kubectl get deployment "$operator_name" -n "$namespace" -o jsonpath='{.status.readyReplicas}')
     local desired_replicas=$(kubectl get deployment "$operator_name" -n "$namespace" -o jsonpath='{.spec.replicas}')
-    
+
     echo -e "${YELLOW}📊 Deployment Status:${NC}"
     echo "Ready: $ready_replicas/$desired_replicas"
-    
+
     if [ "$ready_replicas" = "$desired_replicas" ]; then
         echo -e "${GREEN}✅ Deployment is healthy${NC}"
     else
         echo -e "${RED}❌ Deployment has issues${NC}"
     fi
-    
+
     # Check pod status
     echo -e "\n${YELLOW}🏃 Pod Status:${NC}"
     kubectl get pods -n "$namespace" -l "app.kubernetes.io/name=$operator_name" -o wide
-    
+
     # Check recent logs for errors
     echo -e "\n${YELLOW}🚨 Recent Errors:${NC}"
     local pod_name=$(kubectl get pods -n "$namespace" -l "app.kubernetes.io/name=$operator_name" -o jsonpath='{.items[0].metadata.name}')
@@ -142,18 +142,18 @@ scale_operator() {
     local operator_name="${1:-}"
     local replicas="${2:-}"
     local namespace="${3:-openstack-operators}"
-    
+
     if [ -z "$operator_name" ] || [ -z "$replicas" ]; then
         echo "Usage: scale_operator <operator-name> <replicas> [namespace]"
         return 1
     fi
-    
+
     check_kubeconfig || return 1
-    
+
     echo -e "${BLUE}📏 Scaling $operator_name to $replicas replicas${NC}"
-    
+
     kubectl scale deployment "$operator_name" --replicas="$replicas" -n "$namespace"
-    
+
     echo "Waiting for scaling to complete..."
     kubectl rollout status deployment/"$operator_name" -n "$namespace" --timeout=60s
 }
@@ -162,16 +162,16 @@ scale_operator() {
 restart_operator() {
     local operator_name="${1:-}"
     local namespace="${2:-openstack-operators}"
-    
+
     if [ -z "$operator_name" ]; then
         echo "Usage: restart_operator <operator-name> [namespace]"
         return 1
     fi
-    
+
     check_kubeconfig || return 1
-    
+
     echo -e "${BLUE}🔄 Restarting operator: $operator_name${NC}"
-    
+
     kubectl rollout restart deployment/"$operator_name" -n "$namespace"
     kubectl rollout status deployment/"$operator_name" -n "$namespace" --timeout=60s
 }
@@ -180,25 +180,25 @@ restart_operator() {
 get_config() {
     local operator_name="${1:-}"
     local namespace="${2:-openstack-operators}"
-    
+
     if [ -z "$operator_name" ]; then
         echo "Usage: get_config <operator-name> [namespace]"
         return 1
     fi
-    
+
     check_kubeconfig || return 1
-    
+
     echo -e "${BLUE}⚙️  Configuration for $operator_name${NC}"
     echo "===================================="
-    
+
     # Get deployment config
     echo -e "\n${YELLOW}📋 Deployment Configuration:${NC}"
     kubectl get deployment "$operator_name" -n "$namespace" -o yaml | head -50
-    
+
     # Get configmaps
     echo -e "\n${YELLOW}🗃️  ConfigMaps:${NC}"
     kubectl get configmap -n "$namespace" | grep "$operator_name" || echo "No ConfigMaps found"
-    
+
     # Get secrets
     echo -e "\n${YELLOW}🔐 Secrets:${NC}"
     kubectl get secret -n "$namespace" | grep "$operator_name" || echo "No Secrets found"
@@ -208,29 +208,29 @@ get_config() {
 check_rbac() {
     local operator_name="${1:-}"
     local namespace="${2:-openstack-operators}"
-    
+
     if [ -z "$operator_name" ]; then
         echo "Usage: check_rbac <operator-name> [namespace]"
         return 1
     fi
-    
+
     check_kubeconfig || return 1
-    
+
     echo -e "${BLUE}🔐 RBAC Configuration for $operator_name${NC}"
     echo "=========================================="
-    
+
     # Get ServiceAccount
     echo -e "\n${YELLOW}👤 ServiceAccount:${NC}"
     kubectl get sa -n "$namespace" | grep "$operator_name" || echo "No ServiceAccount found"
-    
+
     # Get ClusterRole
     echo -e "\n${YELLOW}🔑 ClusterRoles:${NC}"
     kubectl get clusterrole | grep "$operator_name" || echo "No ClusterRoles found"
-    
+
     # Get ClusterRoleBinding
     echo -e "\n${YELLOW}🔗 ClusterRoleBindings:${NC}"
     kubectl get clusterrolebinding | grep "$operator_name" || echo "No ClusterRoleBindings found"
-    
+
     # Get RoleBinding
     echo -e "\n${YELLOW}🔗 RoleBindings:${NC}"
     kubectl get rolebinding -n "$namespace" | grep "$operator_name" || echo "No RoleBindings found"
@@ -240,16 +240,16 @@ check_rbac() {
 debug_operator() {
     local operator_name="${1:-}"
     local namespace="${2:-openstack-operators}"
-    
+
     if [ -z "$operator_name" ]; then
         echo "Usage: debug_operator <operator-name> [namespace]"
         echo "This runs a comprehensive debug check"
         return 1
     fi
-    
+
     echo -e "${BLUE}🔍 Comprehensive Debug: $operator_name${NC}"
     echo "========================================"
-    
+
     validate_deployment "$operator_name" "$namespace"
     echo
     resource_usage "$namespace"
