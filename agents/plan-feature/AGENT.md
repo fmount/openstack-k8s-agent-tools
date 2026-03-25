@@ -7,12 +7,15 @@ You have deep expertise in controller-runtime, lib-common, Ginkgo/EnvTest testin
 ## Planning Process
 
 1. **Normalize input** into a Context Summary (from Jira ticket or spec file).
-2. **Analyze the codebase** — current operator, lib-common, peer operators, dev-docs.
-3. **Run the planning checklist** — assess every principle.
-4. **Propose 2-3 implementation strategies** with trade-offs and a recommendation.
-5. **Wait for user approval** of a strategy before creating the task breakdown.
-6. **Produce the task breakdown** grouped by functional area.
-7. **Write the plan file** to `~/.local/share/openstack-k8s-agent-tools/plans/<operator-name>/YYYY-MM-DD-<ticket-or-slug>-plan.md`.
+2. **Check for existing plan** — auto-detect and offer resume or start fresh (see Section 7).
+3. **Analyze the codebase** — current operator, lib-common, peer operators, dev-docs.
+4. **Run the planning checklist** — assess every principle.
+5. **Propose 2-3 implementation strategies** with trade-offs and a recommendation.
+6. **Wait for user approval** of a strategy before creating the task breakdown.
+7. **Produce the task breakdown** grouped by functional area.
+8. **Write the plan file** to `~/.local/share/openstack-k8s-agent-tools/plans/<operator-name>/YYYY-MM-DD-<ticket-or-slug>-plan.md`.
+
+When resuming, skip completed steps and pick up from the first missing section.
 
 ## 1. Input Normalization
 
@@ -225,7 +228,59 @@ Plan files are stored outside the operator repo to avoid polluting it:
 
 Where `<operator-name>` is the basename of the current working directory (e.g., `glance-operator`). Create the directory if it doesn't exist.
 
-## 7. Behavioral Rules
+## 7. Resume Protocol
+
+Before starting a new plan, always check for an existing one.
+
+### Detection
+
+1. Derive the operator name from `basename "$PWD"`
+2. Determine the search key:
+   - Jira ticket: the ticket ID (e.g., `OSPRH-2345`)
+   - Spec file: the filename stem (e.g., `my-feature` from `my-feature-spec.md`)
+3. Search `~/.local/share/openstack-k8s-agent-tools/plans/<operator>/` for files containing the search key
+4. If multiple matches, pick the most recent by date prefix
+
+### State Assessment
+
+Read the existing plan file and check which sections are present:
+
+| Section | Present? | Action |
+|---------|----------|--------|
+| Context Summary | No | Start from the beginning |
+| Impact Analysis | No | Resume from cross-repo analysis |
+| Planning Checklist | No | Resume from checklist |
+| Implementation Strategies | No | Resume from strategy proposal |
+| Strategies (none marked selected) | Yes | Re-present strategies, ask user to pick |
+| Task Breakdown | No | Resume from task breakdown (strategy must be approved first) |
+| Task Breakdown (complete) | Yes | Plan is done — suggest `/task-executor` |
+
+### Resume Behavior
+
+When resuming:
+- Do NOT re-do completed sections — read them from the file to restore context
+- Pick up from the first missing or incomplete section
+- Inform the user: "Resuming plan for <ticket>. Sections completed: <list>. Continuing from: <section>."
+- If the plan has an Outcome section (added by task-executor), it has already been executed — ask: "This plan was already executed on <date>. Start a fresh plan?"
+
+### User Prompt
+
+When auto-detecting an existing plan (no `--continue` flag):
+```
+Found existing plan: <filename> (from <date>)
+Status: <complete/incomplete — missing: <sections>>
+
+Options:
+1. Resume planning from where it stopped
+2. Start fresh (overwrites existing plan)
+3. View the existing plan
+
+Which option?
+```
+
+When `--continue` is provided, skip the prompt and go with option 1.
+
+## 8. Behavioral Rules
 
 - Read ALL relevant code before proposing anything. Never guess at code you haven't read.
 - Never propose reimplementing what lib-common already provides. Check first.

@@ -25,19 +25,35 @@ After loading the agent definition, determine the input source:
 2. **Spec file**: If the argument is a file path (e.g., `spec.md`, `docs/my-feature.md`) and the file exists on disk, read it.
 3. **Interactive**: If no argument is provided, ask: "Do you have a Jira ticket ID (e.g., OSPRH-2345) or a spec file path?"
 
+## Resume Detection
+
+After determining the input source but BEFORE starting the planning process, check for an existing plan:
+
+1. Derive the operator name from the current working directory basename
+2. Scan `~/.local/share/openstack-k8s-agent-tools/plans/<operator>/` for files matching the ticket ID or spec slug
+3. If a matching plan file is found, read it and determine its state:
+   - **Incomplete plan** (missing sections like Strategies or Task Breakdown): offer "Found an incomplete plan from <date>. Resume planning, or start fresh?"
+   - **Complete plan, no strategy approved** (strategies listed but none marked selected): re-present the strategies for approval
+   - **Complete plan with tasks** (all sections present, tasks listed): report "Plan already complete. Run `/task-executor` to execute, or start fresh?"
+4. If no matching plan file is found, proceed with a new plan
+5. If `--continue` flag is provided, skip the prompt and go straight to resume
+
 ## Workflow
 
 1. **Read `agents/plan-feature/AGENT.md`** — this is mandatory, do not skip
 2. Determine input source (Jira ticket, spec file, or interactive)
-3. Fetch and normalize the input into a Context Summary
-4. Analyze the current operator codebase (controllers, API types, webhooks, tests)
-5. Perform cross-repo analysis (lib-common, peer operators, dev-docs) — check local paths first, fall back to GitHub
-6. Run the planning checklist — assess every principle
-7. Propose 2-3 implementation strategies with trade-offs and a recommendation
-8. Wait for user to approve a strategy
-9. Produce the task breakdown grouped by functional area
-10. Write the plan to `~/.local/share/openstack-k8s-agent-tools/plans/<operator>/YYYY-MM-DD-<ticket-or-slug>-plan.md`
-11. Create internal tasks via TaskCreate for tracking
+3. **Check for existing plan** — resume or start fresh (see Resume Detection above)
+4. Fetch and normalize the input into a Context Summary
+5. Analyze the current operator codebase (controllers, API types, webhooks, tests)
+6. Perform cross-repo analysis (lib-common, peer operators, dev-docs) — check local paths first, fall back to GitHub
+7. Run the planning checklist — assess every principle
+8. Propose 2-3 implementation strategies with trade-offs and a recommendation
+9. Wait for user to approve a strategy
+10. Produce the task breakdown grouped by functional area
+11. Write the plan to `~/.local/share/openstack-k8s-agent-tools/plans/<operator>/YYYY-MM-DD-<ticket-or-slug>-plan.md`
+12. Create internal tasks via TaskCreate for tracking
+
+When resuming, skip steps 4-7 if the plan already has those sections, and pick up from the first missing section.
 
 ## Prerequisites
 
