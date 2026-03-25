@@ -22,9 +22,12 @@ openstack-k8s-agent-tools/
 │   ├── analyze-logs/        # Log analysis patterns
 │   ├── code-style/          # Go code style enforcement
 │   ├── test-operator/       # Testing and quality assurance
-│   └── code-review/         # Code review agent (skill entry point)
+│   ├── code-review/         # Code review agent (skill entry point)
+│   └── task-executor/       # Plan execution with checkpointing
 ├── agents/                  # Agent definitions
-│   └── code-review/         # openstack-k8s-operators code reviewer
+│   ├── code-review/         # openstack-k8s-operators code reviewer
+│   ├── plan-feature/        # Feature planning methodology
+│   └── task-executor/       # Plan execution guidelines
 ├── lib/                     # Shared helper scripts and tools
 │   ├── dev-workflow.sh      # Development workflow automation
 │   ├── test-workflow.sh     # Testing workflow automation
@@ -54,11 +57,13 @@ Code flow analysis for operators:
 - Error handling paths
 
 ### `/plan-feature`
-Feature planning for operators:
-- Architecture analysis
-- Implementation breakdown
-- Best practice alignment
-- Task creation with TodoWrite
+Feature and bug fix planning with Jira integration:
+- Fetch Jira tickets via Atlassian MCP (or use local spec files)
+- Cross-repo analysis (lib-common, peer operators, dev-docs)
+- Structured planning checklist (API, webhooks, conditions, tests, RBAC, etc.)
+- 2-3 implementation strategies with trade-offs and recommendation
+- Task breakdown grouped by functional area
+- Plan files written to `docs/plans/` for task-executor consumption
 
 ### `/analyze-logs`
 Intelligent log analysis:
@@ -92,6 +97,21 @@ Code review agent for openstack-k8s-operators:
 - Testing (EnvTest, TestVector pattern, simulated dependencies)
 - RBAC marker verification
 - Structured review output with severity and verdict
+
+### `/task-executor`
+Execute implementation plans task-by-task:
+- Load and resume plan files from `docs/plans/`
+- Sequential task execution with checkpointing
+- Code quality enforcement (gopls modernize, lib-common, conventions)
+- Test-first for new reconciliation paths
+- Group boundary review gates
+
+## MCP Integrations
+
+### Atlassian MCP (Optional)
+The `/plan-feature` skill integrates with Atlassian MCP for Jira ticket reading. When configured, you can invoke `/plan-feature OSPRH-2345` to fetch and plan from a Jira ticket directly. Without it, the skill works with local spec files or pasted content.
+
+Configure the Atlassian MCP server in your Claude Code settings to enable this integration.
 
 ## Development Guidelines
 
