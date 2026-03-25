@@ -6,17 +6,23 @@ Claude Code plugin for [openstack-k8s-operators](https://github.com/openstack-k8
 
 ### Claude Code (recommended)
 
-Install via the plugin marketplace:
+From the marketplace (inside Claude Code):
 
 ```bash
 /plugin install openstack-k8s-agent-tools
 ```
 
+Or add directly from the repository URL:
+
+```bash
+claude plugin marketplace add https://github.com/fmount/openstack-k8s-agent-tools
+```
+
 Or clone and install manually:
 
 ```bash
-git clone https://github.com/openstack-k8s-operators/operator-tools.git
-cd operator-tools
+git clone https://github.com/fmount/openstack-k8s-agent-tools.git
+cd openstack-k8s-agent-tools
 ./scripts/install.sh --claude-code
 ```
 
@@ -139,37 +145,37 @@ write code --> /test-operator quick --> /test-operator focus "..." --> /code-sty
 ### Skill Interaction Map
 
 ```
-+-------------------------------------------------------------------+
-|                                                                   |
-|  PLANNING & EXECUTION          QUALITY & REVIEW                   |
-|                                                                   |
-|  /plan-feature -----+         /test-operator                      |
-|  [plan-feature]     |           quick | standard | full           |
-|       |             |                |                            |
-|       v             |         /code-style                         |
-|  ~/.local/share/    |           gopls modernize                   |
-|    .../plans/       |                |                            |
-|       |             |                |                            |
-|       v             |         /code-review                        |
-|  /task-executor     |         [code-review]                       |
-|  [task-executor] ---+----> uses during execution                  |
-|                                                                   |
-|  DEBUGGING & ANALYSIS          CODE UNDERSTANDING                 |
-|                                                                   |
-|  /debug-operator               /explain-flow                      |
-|    dev workflow                  reconciler logic                  |
-|    runtime debug                 state transitions                |
-|       |                                                           |
-|  /analyze-logs                                                    |
-|    25+ error patterns                                             |
-|                                                                   |
-+-------------------------------------------------------------------+
-|  AGENTS              | EXTERNAL INTEGRATIONS                      |
-|  plan-feature        | [Atlassian MCP] --> /plan-feature (Jira)   |
-|  task-executor       | [GitHub CLI]    --> /plan-feature (repos)   |
-|  code-review         | [lib-common]    --> plan + execute (reuse)  |
-|                      | [dev-docs]      --> plan + review (conventions)
-+-------------------------------------------------------------------+
++------------------------------------------------------------------------+
+|                                                                        |
+|  PLANNING & EXECUTION          QUALITY & REVIEW                        |
+|                                                                        |
+|  /plan-feature -----+         /test-operator                           |
+|  [plan-feature]     |           quick | standard | full                |
+|       |             |                |                                 |
+|       v             |         /code-style                              |
+|  ~/.local/share/    |           gopls modernize                        |
+|    .../plans/       |                |                                 |
+|       |             |                |                                 |
+|       v             |         /code-review                             |
+|  /task-executor     |         [code-review]                            |
+|  [task-executor] ---+----> uses during execution                       |
+|                                                                        |
+|  DEBUGGING & ANALYSIS          CODE UNDERSTANDING                      |
+|                                                                        |
+|  /debug-operator               /explain-flow                           |
+|    dev workflow                  - reconciler logic                    |
+|    runtime debug                 - state transitions                   |
+|       |                                                                |
+|  /analyze-logs                                                         |
+|    25+ error patterns                                                  |
+|                                                                        |
++------------------------------------------------------------------------+
+|  AGENTS              | EXTERNAL INTEGRATIONS                           |
+|  plan-feature        | [Atlassian MCP] --> /plan-feature (Jira)        |
+|  task-executor       | [GitHub CLI]    --> /plan-feature (repos)       |
+|  code-review         | [lib-common]    --> plan + execute (reuse)      |
+|                      | [dev-docs]      --> plan + review (conventions) |
++------------------------------------------------------------------------+
 ```
 
 ## Documentation
@@ -181,11 +187,7 @@ write code --> /test-operator quick --> /test-operator focus "..." --> /code-sty
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Add skills following existing patterns (see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md))
-4. Test with real openstack-k8s-operators operators
-5. Submit a pull request
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
