@@ -36,7 +36,7 @@ After loading the agent definition, determine the input source:
 7. Propose 2-3 implementation strategies with trade-offs and a recommendation
 8. Wait for user to approve a strategy
 9. Produce the task breakdown grouped by functional area
-10. Write the plan to `$CWD/docs/plans/YYYY-MM-DD-<ticket-or-slug>-plan.md`
+10. Write the plan to `~/.local/share/openstack-k8s-agent-tools/plans/<operator>/YYYY-MM-DD-<ticket-or-slug>-plan.md`
 11. Create internal tasks via TaskCreate for tracking
 
 ## Prerequisites

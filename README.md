@@ -75,7 +75,7 @@ cd ~/go/src/github.com/openstack-k8s-operators/heat-operator
 The skill fetches the ticket, analyzes your codebase and cross-references lib-common and peer operators, runs an 11-principle planning checklist, proposes implementation strategies, and produces a task breakdown. Then execute it:
 
 ```bash
-/task-executor docs/plans/2026-03-25-OSPRH-4567-plan.md
+/task-executor   # discovers plans for current operator automatically
 ```
 
 See [docs/plan-feature.md](docs/plan-feature.md) for a full walkthrough.
@@ -147,7 +147,8 @@ write code --> /test-operator quick --> /test-operator focus "..." --> /code-sty
 |  [plan-feature]     |           quick | standard | full           |
 |       |             |                |                            |
 |       v             |         /code-style                         |
-|  docs/plans/        |           gopls modernize                   |
+|  ~/.local/share/    |           gopls modernize                   |
+|    .../plans/       |                |                            |
 |       |             |                |                            |
 |       v             |         /code-review                        |
 |  /task-executor     |         [code-review]                       |

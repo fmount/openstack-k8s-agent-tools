@@ -63,7 +63,7 @@ Feature and bug fix planning with Jira integration:
 - Structured planning checklist (API, webhooks, conditions, tests, RBAC, etc.)
 - 2-3 implementation strategies with trade-offs and recommendation
 - Task breakdown grouped by functional area
-- Plan files written to `docs/plans/` for task-executor consumption
+- Plan files saved to `~/.local/share/openstack-k8s-agent-tools/plans/` per operator
 
 ### `/analyze-logs`
 Intelligent log analysis:
@@ -100,7 +100,7 @@ Code review agent for openstack-k8s-operators:
 
 ### `/task-executor`
 Execute implementation plans task-by-task:
-- Load and resume plan files from `docs/plans/`
+- Load and resume plan files from `~/.local/share/openstack-k8s-agent-tools/plans/`
 - Sequential task execution with checkpointing
 - Code quality enforcement (gopls modernize, lib-common, conventions)
 - Test-first for new reconciliation paths

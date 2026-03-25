@@ -38,7 +38,7 @@ Plan features and bug fixes for openstack-k8s-operators operators with Jira inte
               | common  ops   docs    |           |
               +---+------+------+----+-----------+
                                       |
-                          docs/plans/<plan>.md
+                          ~/.local/share/openstack-k8s-agent-tools/plans/<operator>/<plan>.md
                                       |
                               /task-executor
                               [agent: task-executor]
@@ -105,7 +105,7 @@ Plan features and bug fixes for openstack-k8s-operators operators with Jira inte
 |     Group 1: API  --> Task 1.1, 1.2, 1.3                      |
 |     Group 2: Ctrl --> Task 2.1, 2.2                            |
 |     Group 3: Test --> Task 3.1, 3.2                            |
-|     --> writes docs/plans/<plan>.md                            |
+|     --> writes ~/.local/share/openstack-k8s-agent-tools/plans/<operator>/<plan>.md                            |
 |                                                                |
 +---------------------------------------------------------------+
 ```
@@ -118,7 +118,7 @@ Plan features and bug fixes for openstack-k8s-operators operators with Jira inte
 |                     [agent: task-executor]                      |
 +---------------------------------------------------------------+
 |                                                                |
-|  LOAD          READ docs/plans/<plan>.md                       |
+|  LOAD          READ ~/.local/share/openstack-k8s-agent-tools/plans/<operator>/<plan>.md                       |
 |  VALIDATE      check 5 sections present                        |
 |  DETECT        find first uncompleted task                     |
 |  REPORT        "3/8 tasks done. Next: Task 2.1"               |
@@ -251,7 +251,7 @@ The skill proposes approaches (e.g., "follow nova-operator exactly" vs "simplifi
 ### Step 7: Execute the plan
 
 ```bash
-/task-executor docs/plans/2026-03-25-OSPRH-4567-plan.md
+/task-executor ~/.local/share/openstack-k8s-agent-tools/plans/<operator>/2026-03-25-OSPRH-4567-plan.md
 ```
 
 The task-executor picks up the plan file, shows progress, and executes tasks one by one with checkpointing. You can quit and resume anytime.

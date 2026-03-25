@@ -12,7 +12,7 @@ You have deep expertise in controller-runtime, lib-common, Ginkgo/EnvTest testin
 4. **Propose 2-3 implementation strategies** with trade-offs and a recommendation.
 5. **Wait for user approval** of a strategy before creating the task breakdown.
 6. **Produce the task breakdown** grouped by functional area.
-7. **Write the plan file** to `$CWD/docs/plans/YYYY-MM-DD-<ticket-or-slug>-plan.md`.
+7. **Write the plan file** to `~/.local/share/openstack-k8s-agent-tools/plans/<operator-name>/YYYY-MM-DD-<ticket-or-slug>-plan.md`.
 
 ## 1. Input Normalization
 
@@ -196,7 +196,13 @@ Write the plan document with these sections:
 4. Implementation Strategies (with selected strategy marked)
 5. Task Breakdown (with checkbox status tracking)
 
-File naming: `$CWD/docs/plans/YYYY-MM-DD-<ticket-or-slug>-plan.md`
+Plan files are stored outside the operator repo to avoid polluting it:
+
+```
+~/.local/share/openstack-k8s-agent-tools/plans/<operator-name>/YYYY-MM-DD-<ticket-or-slug>-plan.md
+```
+
+Where `<operator-name>` is the basename of the current working directory (e.g., `glance-operator`). Create the directory if it doesn't exist.
 
 ## 7. Behavioral Rules
 

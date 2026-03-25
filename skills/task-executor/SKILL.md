@@ -20,9 +20,9 @@ Before doing anything else, you MUST read the agent definition file to load the 
 
 After loading the agent definition, determine the plan to execute:
 
-1. **Explicit path**: If a file path is provided (e.g., `docs/plans/2026-03-25-OSPRH-2345-plan.md`), load that plan file.
-2. **Plan discovery**: If no argument is provided, scan `$CWD/docs/plans/` for plan files. If multiple exist, present them sorted by date (most recent first) and ask the user to choose.
-3. **No plans found**: If no plan files exist, respond: "No plans found in docs/plans/. Run `/plan-feature` first to generate a plan."
+1. **Explicit path**: If a file path is provided, load that plan file directly.
+2. **Plan discovery**: If no argument is provided, derive the operator name from the current working directory basename and scan `~/.local/share/openstack-k8s-agent-tools/plans/<operator-name>/` for plan files. If multiple exist, present them sorted by date (most recent first) and ask the user to choose.
+3. **No plans found**: If no plan files exist, respond: "No plans found for <operator-name>. Run `/plan-feature` first to generate a plan."
 
 ## Workflow
 
