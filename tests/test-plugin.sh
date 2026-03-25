@@ -81,6 +81,16 @@ run_plugin_tests() {
     test_file_exists "skills/explain-flow/SKILL.md" "Explain flow skill exists"
     test_file_exists "skills/plan-feature/SKILL.md" "Plan feature skill exists"
     test_file_exists "skills/analyze-logs/SKILL.md" "Analyze logs skill exists"
+    test_file_exists "skills/code-style/SKILL.md" "Code style skill exists"
+    test_file_exists "skills/test-operator/SKILL.md" "Test operator skill exists"
+    test_file_exists "skills/code-review/SKILL.md" "Code review skill exists"
+    test_file_exists "skills/task-executor/SKILL.md" "Task executor skill exists"
+
+    # Test agents
+    echo -e "\n${YELLOW}🤖 Testing Agents${NC}"
+    test_file_exists "agents/code-review/AGENT.md" "Code review agent exists"
+    test_file_exists "agents/plan-feature/AGENT.md" "Plan feature agent exists"
+    test_file_exists "agents/task-executor/AGENT.md" "Task executor agent exists"
 
     # Test lib helpers
     echo -e "\n${YELLOW}📦 Testing Lib${NC}"
