@@ -45,16 +45,18 @@ cd operator-tools
 
 ## Skills
 
-| Skill | Purpose |
-|-------|---------|
-| `/debug-operator` | Development workflow + runtime debugging |
-| `/test-operator` | Testing & QA — quick, standard, full, security, coverage |
-| `/code-style` | Go code style enforcement (gopls modernize, conventions) |
-| `/analyze-logs` | Log pattern recognition (25+ patterns) |
-| `/explain-flow` | Code flow analysis for controllers |
-| `/plan-feature` | Feature/bug planning with Jira, cross-repo analysis, structured strategies |
-| `/code-review` | Code review against openstack-k8s-operators conventions |
-| `/task-executor` | Execute plans task-by-task with checkpointing and resume |
+| Skill | Agent | Purpose |
+|-------|-------|---------|
+| `/debug-operator` | — | Development workflow + runtime debugging |
+| `/test-operator` | — | Testing & QA — quick, standard, full, security, coverage |
+| `/code-style` | — | Go code style enforcement (gopls modernize, conventions) |
+| `/analyze-logs` | — | Log pattern recognition (25+ patterns) |
+| `/explain-flow` | — | Code flow analysis for controllers |
+| `/plan-feature` | `plan-feature` | Feature/bug planning with Jira, cross-repo analysis, structured strategies |
+| `/code-review` | `code-review` | Code review against openstack-k8s-operators conventions |
+| `/task-executor` | `task-executor` | Execute plans task-by-task with checkpointing and resume |
+
+Skills with an agent load an `AGENT.md` file that contains the full domain knowledge and methodology. Skills without an agent are self-contained in their `SKILL.md`.
 
 ## Quickstart
 
@@ -117,42 +119,170 @@ kubectl logs deployment/nova-operator -n openstack > nova.log
 ### Feature Development
 
 ```
-/plan-feature OSPRH-2345
-    │
-    ├── Fetches Jira ticket (or reads spec file)
-    ├── Analyzes codebase + lib-common + peer operators + dev-docs
-    ├── Runs planning checklist (API, webhooks, conditions, tests, RBAC, ...)
-    ├── Proposes 2-3 strategies → you pick one
-    └── Writes plan to docs/plans/
-
-/task-executor docs/plans/...-plan.md
-    │
-    ├── Executes tasks sequentially with checkpointing
-    ├── Test-first for new reconciliation paths
-    ├── Pauses at group boundaries for review
-    └── Resume anytime — progress saved to plan file
-
-/test-operator full → /code-review → submit PR
+ Jira ticket                  Spec file (.md)
+      |                            |
+      +----------+   +-------------+
+                 |   |
+            /plan-feature
+            [agent: plan-feature]
+                 |
+     +-----------+-----------+-----------+
+     |           |           |           |
+  Context    Cross-repo   Planning   Strategies
+  Summary    Analysis     Checklist  (2-3 options)
+     |           |           |           |
+     |    +------+------+    |     user picks
+     |    |      |      |    |        one
+     |  lib-   peer   dev-   |           |
+     | common  ops   docs    |           |
+     +---+------+------+----+-----------+
+                 |
+          docs/plans/<plan>.md
+                 |
+            /task-executor
+            [agent: task-executor]
+                 |
+     +-----------+-----------+
+     |           |           |
+   Group 1    Group 2    Group 3
+  API changes Controller  Testing
+     |           |           |
+     +---each task-----------+
+     |   write -> test -> checkpoint
+     |   pause at group boundaries
+     |
+     +---> /test-operator full
+     +---> /code-review [agent: code-review]
+     +---> submit PR
 ```
 
 ### Bug Fix
 
 ```
-/analyze-logs operator-error.log    → identify patterns
-/debug-operator                     → systematic diagnosis
-/plan-feature OSPRH-6789            → plan the fix (includes root cause + regression test)
-/task-executor docs/plans/...-plan.md → implement
-/test-operator full                 → validate
+  logs / error report
+         |
+    /analyze-logs ---------> pattern report
+         |                   (25+ patterns)
+    /debug-operator -------> diagnosis
+         |                   (pods, events,
+         |                    RBAC, conditions)
+    /plan-feature OSPRH-XXX
+    [agent: plan-feature]
+         |
+     +---+---+
+     |       |
+  root    regression
+  cause   test plan
+  hypothesis  |
+     |        |
+     +---+----+
+         |
+    docs/plans/<plan>.md
+         |
+    /task-executor --------> fix + tests
+    [agent: task-executor]
+         |
+    /test-operator full ---> validate
+         |
+    /code-review ----------> review
+    [agent: code-review]
+         |
+      submit PR
 ```
 
 ### Daily Development
 
 ```
-/test-operator quick                → fast feedback (~10s)
-/test-operator focus "pattern"      → iterate on specific tests
-/code-style                         → check conventions
-/test-operator standard             → pre-commit validation
-/code-review                        → self-review before PR
+                    +------------------+
+                    |   write code     |<----------+
+                    +--------+---------+           |
+                             |                     |
+                    /test-operator quick            |
+                       fmt + vet + tidy             |
+                             |                     |
+                       pass? |                     |
+                     +---yes-+--no--+              |
+                     |              |              |
+            /test-operator     fix issues ---------+
+            focus "pattern"
+                     |
+                pass? |
+              +--yes--+--no--+
+              |              |
+         /code-style    fix + iterate ----+
+              |                           |
+         /test-operator standard          |
+           lint + full tests              |
+              |                           |
+         /code-review                     |
+         [agent: code-review]             |
+              |                           |
+         verdict?                         |
+      +--approve--+--changes--+-----------+
+      |
+   submit PR
+```
+
+### Skill Interaction Map
+
+```
++-------------------------------------------------------------------+
+|                        SKILLS & AGENTS                            |
++-------------------------------------------------------------------+
+|                                                                   |
+|  PLANNING & EXECUTION          QUALITY & REVIEW                   |
+|  ~~~~~~~~~~~~~~~~~~~~          ~~~~~~~~~~~~~~~~                   |
+|                                                                   |
+|  /plan-feature -----+         /test-operator                      |
+|  [plan-feature]     |           quick | standard | full           |
+|       |              |              |                              |
+|       v              |         /code-style                        |
+|  docs/plans/         |           gopls modernize                  |
+|       |              |              |                              |
+|       v              |         /code-review                       |
+|  /task-executor      |         [code-review]                      |
+|  [task-executor]     |           10 review criteria               |
+|       |              |                                            |
+|       +--------------+----> uses during execution                 |
+|                                                                   |
+|  DEBUGGING & ANALYSIS          CODE UNDERSTANDING                 |
+|  ~~~~~~~~~~~~~~~~~~~~          ~~~~~~~~~~~~~~~~~~                 |
+|                                                                   |
+|  /debug-operator               /explain-flow                      |
+|    dev workflow                  reconciler logic                  |
+|    runtime debug                 state transitions                |
+|       |                          decision trees                   |
+|       v                                                           |
+|  /analyze-logs                                                    |
+|    25+ patterns                                                   |
+|    performance                                                    |
+|    OpenStack-specific                                             |
+|                                                                   |
++-------------------------------------------------------------------+
+|                        AGENTS                                     |
++-------------------------------------------------------------------+
+|                                                                   |
+|  plan-feature     task-executor     code-review                   |
+|  agents/          agents/           agents/                       |
+|  plan-feature/    task-executor/    code-review/                  |
+|  AGENT.md         AGENT.md          AGENT.md                     |
+|                                                                   |
+|  - input norm     - sequential      - reconciliation              |
+|  - cross-repo       execution       - conditions                  |
+|    analysis       - code quality     - webhooks                   |
+|  - 11-principle     standards       - API design                  |
+|    checklist      - test-first      - RBAC                        |
+|  - strategies     - checkpoint      - testing                     |
+|  - task breakdown - group review    - code style                  |
+|                                                                   |
++-------------------------------------------------------------------+
+
+  External integrations:
+  ~~~~~~~~~~~~~~~~~~~~~~
+  [Atlassian MCP] ---> /plan-feature (Jira tickets)
+  [GitHub CLI]    ---> /plan-feature (cross-repo fallback)
+  [lib-common]    ---> /plan-feature, /task-executor (pattern reuse)
+  [dev-docs]      ---> /plan-feature, /code-review (conventions)
 ```
 
 ## Documentation
