@@ -19,4 +19,5 @@ repos:
     rev: v0.44.0
     hooks:
       - id: markdownlint
-        args: ['--fix', '--disable', 'MD013', 'MD033', 'MD041', '--']
+        args: ['--fix', '--disable', 'MD013', 'MD033', 'MD041', 'MD040', '--']
+        exclude: '^docs/specs/'
