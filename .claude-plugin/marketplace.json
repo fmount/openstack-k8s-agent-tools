@@ -3,17 +3,17 @@
   "description": "Marketplace for openstack-k8s-operators operator development and troubleshooting tools",
   "owner": {
     "name": "openstack-k8s-operators Development Team",
-    "email": "openstack-k8s-operators-dev@redhat.com"
+    "email": "fpantano@redhat.com"
   },
   "plugins": [
     {
       "name": "openstack-k8s-agent-tools",
       "description": "Comprehensive development and troubleshooting tools for openstack-k8s-operators (Red Hat OpenStack Services on OpenShift) operators. Provides systematic debugging workflows, code analysis, log pattern recognition, and development best practices with integration for openstack-k8s-operators conventions, Ginkgo testing framework, and gopls modernization patterns.",
-      "version": "0.1.0",
-      "source": "https://github.com/openstack-k8s-operators/operator-tools",
+      "version": "0.2.0",
+      "source": "https://github.com/fmount/openstack-k8s-agent-tools",
       "author": {
         "name": "openstack-k8s-operators Development Team",
-        "email": "openstack-k8s-operators-dev@redhat.com"
+        "email": "fpantano@redhac.com"
       }
     }
   ]

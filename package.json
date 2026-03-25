@@ -1,6 +1,6 @@
 {
   "name": "openstack-k8s-agent-tools",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Development and troubleshooting tools for openstack-k8s-operators operators",
   "main": "index.js",
   "scripts": {
@@ -27,10 +27,10 @@
   "devDependencies": {},
   "repository": {
     "type": "git",
-    "url": "https://github.com/openstack-k8s-operators/operator-tools.git"
+    "url": "https://github.com/fmount/openstack-k8s-agent-tools.git"
   },
   "bugs": {
-    "url": "https://github.com/openstack-k8s-operators/operator-tools/issues"
+    "url": "https://github.com/fmount/openstack-k8s-agent-tools/issues"
   },
   "engines": {
     "node": ">=14.0.0"

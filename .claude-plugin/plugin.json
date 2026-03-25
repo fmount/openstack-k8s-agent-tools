@@ -6,8 +6,8 @@
     "name": "openstack-k8s-operators Development Team",
     "email": "openstack-k8s-operators-dev@redhat.com"
   },
-  "homepage": "https://github.com/openstack-k8s-operators/operator-tools",
-  "repository": "https://github.com/openstack-k8s-operators/operator-tools",
+  "homepage": "https://github.com/fmount/openstack-k8s-agent-tools",
+  "repository": "https://github.com/fmount/openstack-k8s-agent-tools",
   "license": "MIT",
   "keywords": ["openstack-k8s-operators", "operators", "debugging", "kubernetes", "openstack", "testing", "linting", "quality-assurance"]
 }
