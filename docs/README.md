@@ -34,34 +34,31 @@ cp /path/to/openstack-k8s-agent-tools/CLAUDE.md .
 ## Common Workflows
 
 ### Development
+
 ```bash
 /test-operator quick              # Fast validation
 /debug-operator focus-test "..."  # Focused testing
 ```
 
 ### Pre-Commit
+
 ```bash
 /test-operator standard
 /code-style
 ```
 
 ### Pre-PR
+
 ```bash
 /debug-operator
 /test-operator full
 /test-operator security
 ```
 
-### Troubleshooting
-```bash
-kubectl logs pod > log.txt
-/analyze-logs
-/explain-flow
-```
-
 ## Integration
 
 All skills integrate with:
+
 - [openstack-k8s-operators/dev-docs](https://github.com/openstack-k8s-operators/dev-docs)
 - [lib-common](https://github.com/openstack-k8s-operators/lib-common)
 - Ginkgo testing framework
@@ -73,9 +70,14 @@ All skills integrate with:
 
 **Make targets fail**: Verify in operator directory with Makefile
 
-**KUBECONFIG errors**: `export KUBECONFIG=/path/to/config`
-
 **Permissions**: `chmod +x skills/**/*.sh scripts/*.sh`
+
+Use the following skills to understand more about the failure:
+
+```bash
+/analyze-logs
+/explain-flow
+```
 
 ## Additional Resources
 

@@ -30,6 +30,7 @@
 ### Task 1: Create `agents/plan-feature/AGENT.md`
 
 **Files:**
+
 - Create: `agents/plan-feature/AGENT.md`
 
 **Reference:** `agents/code-review/AGENT.md` for structure and tone
@@ -82,6 +83,7 @@ Parse the markdown for:
 Regardless of source, produce this normalized structure:
 
 ```
+
 ## Context Summary
 
 **Source:** OSPRH-2345 (Jira) | path/to/spec.md (file)
@@ -89,20 +91,25 @@ Regardless of source, produce this normalized structure:
 **Priority:** <priority>
 
 ### Problem Statement
+
 <what needs to change and why>
 
 ### Requirements
+
 1. <requirement 1>
 2. <requirement 2>
 ...
 
 ### Acceptance Criteria
+
 - [ ] <criterion 1>
 - [ ] <criterion 2>
 ...
 
 ### Linked Issues / References
+
 - <related tickets or docs>
+
 ```
 
 ## 2. Cross-Repo Analysis Procedure
@@ -177,29 +184,35 @@ When the ticket type is Bug, also produce:
 Propose 2-3 implementation strategies. For each:
 
 ```
+
 ### Strategy <N>: <one-line summary>
 
 **Approach:** How it works — which files change, what patterns it follows, key design decisions.
 
 **Pros:**
+
 - <advantage 1>
 - <advantage 2>
 
 **Cons:**
+
 - <disadvantage 1>
 - <disadvantage 2>
 
 **Risk:** Low / Medium / High — and why.
 **Convention Alignment:** How well it follows openstack-k8s-operators patterns.
 **lib-common Impact:** None / Uses existing / Requires new contribution.
+
 ```
 
 After presenting all strategies:
 
 ```
+
 ### Recommendation
 
 **Strategy <N>** is recommended because <reasoning>.
+
 ```
 
 Do NOT proceed to task breakdown until the user explicitly approves a strategy.
@@ -223,6 +236,7 @@ Each task is one reviewable unit of work. It should:
 
 ### Task Format
 ```
+
 ## Group N: <Area Name>
 
 - [ ] **Task N.M: <description>**
@@ -230,6 +244,7 @@ Each task is one reviewable unit of work. It should:
   - **Depends on:** Task X.Y (if applicable)
   - **Acceptance:** <how to verify this task is done>
   - **Notes:** <additional context>
+
 ```
 
 ## 6. Output Format
@@ -281,6 +296,7 @@ git commit -m "feat: add plan-feature agent with planning methodology"
 ### Task 2: Create `agents/task-executor/AGENT.md`
 
 **Files:**
+
 - Create: `agents/task-executor/AGENT.md`
 
 **Reference:** `agents/code-review/AGENT.md` for structure; spec Section 9 for outline
@@ -329,10 +345,12 @@ If the plan file is missing sections, has no tasks, or cannot be parsed:
 
 ### Resume Summary Format
 ```
+
 Progress: 3/8 tasks completed (Groups 1 fully done)
 Next: Task 2.1 — Implement reconciliation for new field
 Group: Controller Logic
 Dependencies: Task 1.1, Task 1.2 (both completed)
+
 ```
 
 ## 2. Execution Principles
@@ -387,7 +405,9 @@ import (
 ```
 
 ### Error Wrapping
+
 Always wrap errors with context:
+
 ```go
 if err != nil {
     return ctrl.Result{}, fmt.Errorf("failed to get %s: %w", instance.Name, err)
@@ -395,20 +415,26 @@ if err != nil {
 ```
 
 ### Structured Logging
+
 Use controller-runtime logging, never `fmt.Print*`:
+
 ```go
 log := ctrl.LoggerFrom(ctx)
 log.Info("Reconciling instance", "name", instance.Name)
 ```
 
 ### Receiver Naming
+
 Single lowercase letter matching the type initial:
+
 ```go
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 ```
 
 ### lib-common First
+
 Before writing any utility code, check if lib-common already provides it:
+
 - `common/condition` — condition management
 - `common/helper` — reconciler helper utilities
 - `common/service` — OpenStack service management
@@ -423,6 +449,7 @@ If lib-common has a helper, use it. Do NOT reimplement.
 ## 4. Testing Standards
 
 ### EnvTest Patterns
+
 ```go
 var _ = Describe("Controller", func() {
     Context("when creating a new instance", func() {
@@ -442,6 +469,7 @@ var _ = Describe("Controller", func() {
 ```
 
 Key rules:
+
 - **Eventually/Gomega**: always use for async assertions — never bare `Expect` for reconciled state
 - **Unique namespaces**: namespaces cannot be deleted in envtest; create a unique one per test
 - **Simulated dependencies**: set `Job.Status.Succeeded = true`, mock CR status fields
@@ -449,6 +477,7 @@ Key rules:
 - **No FIt/FDescribe**: never commit focused test markers to main
 
 ### Kuttl Test Structure
+
 ```
 tests/kuttl/
   test-<scenario>/
@@ -459,7 +488,9 @@ tests/kuttl/
 ```
 
 ### TestVector Pattern
+
 For validation and unit tests, prefer declarative test vectors:
+
 ```go
 type TestVector struct {
     name    string
@@ -481,6 +512,7 @@ allCases := slices.Concat(validCases, invalidCases)
 ## 5. Checkpoint & Resume Protocol
 
 ### Plan File Update Format
+
 ```markdown
 - [x] **Task 1.1: Add new field to FooSpec** *(completed)*
 - [x] **Task 1.2: Run make manifests generate** *(completed)*
@@ -489,12 +521,14 @@ allCases := slices.Concat(validCases, invalidCases)
 ```
 
 ### On Task Completion
+
 1. Mark checkbox: `- [ ]` → `- [x]`
 2. Append `*(completed)*`
 3. Write the updated plan file to disk
 4. Report: "Task N.M completed. Progress: X/Y tasks done."
 
 ### On Resume
+
 1. Read the plan file
 2. Find first `- [ ]` task
 3. Show progress summary (see Section 1)
@@ -503,20 +537,26 @@ allCases := slices.Concat(validCases, invalidCases)
 ## 6. Error Handling
 
 ### Task Failure
+
 If a task fails (build error, test failure, unexpected state):
+
 1. Keep the task as `- [ ]` (do NOT mark done)
 2. Report the error with full context (command output, file paths)
 3. Ask the user: "Task N.M failed: <error>. Should I retry, skip, or stop?"
 4. Do NOT proceed to the next task automatically
 
 ### Codebase Drift
+
 If files referenced in a task have changed since the plan was created:
+
 1. Detect during pre-task validation (file doesn't exist, content has changed significantly)
 2. Report: "Codebase drift detected: <specific changes>"
 3. Ask: "Adapt this task to the current code, or regenerate the plan with /plan-feature?"
 
 ### Corrupted Plan File
+
 If the plan file cannot be parsed:
+
 1. Report: "Plan file is malformed: <specific issue>"
 2. Ask: "Fix manually, or regenerate with /plan-feature?"
 3. Do NOT attempt to execute
@@ -550,6 +590,7 @@ When the last task in a functional group is completed:
 - [envtest](https://github.com/openstack-k8s-operators/dev-docs/blob/main/envtest.md)
 - [observed_generation](https://github.com/openstack-k8s-operators/dev-docs/blob/main/observed_generation.md)
 - [developer](https://github.com/openstack-k8s-operators/dev-docs/blob/main/developer.md)
+
 ```
 
 - [ ] **Step 3: Verify the file exists and is well-formed**
@@ -569,6 +610,7 @@ git commit -m "feat: add task-executor agent with execution principles"
 ### Task 3: Rewrite `skills/plan-feature/SKILL.md`
 
 **Files:**
+
 - Rewrite: `skills/plan-feature/SKILL.md`
 
 **Reference:** `skills/code-review/SKILL.md` for structure
@@ -658,6 +700,7 @@ git commit -m "feat: rewrite plan-feature skill with Jira integration and AGENT.
 ### Task 4: Create `skills/task-executor/SKILL.md`
 
 **Files:**
+
 - Create: `skills/task-executor/SKILL.md`
 
 **Reference:** `skills/code-review/SKILL.md` for structure; `skills/plan-feature/SKILL.md` (just rewritten) for pattern
@@ -736,6 +779,7 @@ git commit -m "feat: add task-executor skill for plan execution with resume"
 ### Task 5: Create `.claude/skills/` auto-discovery copies
 
 **Files:**
+
 - Update: `.claude/skills/plan-feature/SKILL.md`
 - Create: `.claude/skills/task-executor/SKILL.md`
 
@@ -759,6 +803,7 @@ git commit -m "feat: add auto-discovery copies for plan-feature and task-executo
 ### Task 6: Update `CLAUDE.md`
 
 **Files:**
+
 - Modify: `CLAUDE.md`
 
 - [ ] **Step 1: Read the current CLAUDE.md**
@@ -782,6 +827,7 @@ Execute implementation plans task-by-task:
 - [ ] **Step 3: Update the Project Structure tree**
 
 Add the new directories to the existing tree in CLAUDE.md:
+
 - Under `agents/`: add `plan-feature/` and `task-executor/` entries
 - Under `skills/`: add `task-executor/` entry
 
@@ -844,6 +890,7 @@ git commit -m "docs: update CLAUDE.md with task-executor skill and MCP integrati
 ### Task 7: Create `docs/plans/.gitkeep`
 
 **Files:**
+
 - Create: `docs/plans/.gitkeep`
 
 - [ ] **Step 1: Create the directory and gitkeep**
@@ -866,33 +913,41 @@ git commit -m "chore: add docs/plans directory for generated plan files"
 - [ ] **Step 1: Verify all new files exist**
 
 Run:
+
 ```bash
 ls -la /home/fmount/projects/openstack-k8s-agent-tools/agents/plan-feature/AGENT.md /home/fmount/projects/openstack-k8s-agent-tools/agents/task-executor/AGENT.md /home/fmount/projects/openstack-k8s-agent-tools/skills/plan-feature/SKILL.md /home/fmount/projects/openstack-k8s-agent-tools/skills/task-executor/SKILL.md /home/fmount/projects/openstack-k8s-agent-tools/.claude/skills/plan-feature/SKILL.md /home/fmount/projects/openstack-k8s-agent-tools/.claude/skills/task-executor/SKILL.md /home/fmount/projects/openstack-k8s-agent-tools/docs/plans/.gitkeep
 ```
+
 Expected: all 7 files exist
 
 - [ ] **Step 2: Verify SKILL.md frontmatter is valid YAML**
 
 Run:
+
 ```bash
 head -7 /home/fmount/projects/openstack-k8s-agent-tools/skills/plan-feature/SKILL.md && echo "---" && head -7 /home/fmount/projects/openstack-k8s-agent-tools/skills/task-executor/SKILL.md
 ```
+
 Expected: both start with `---` and have valid frontmatter
 
 - [ ] **Step 3: Verify auto-discovery copies match canonical files**
 
 Run:
+
 ```bash
 diff /home/fmount/projects/openstack-k8s-agent-tools/skills/plan-feature/SKILL.md /home/fmount/projects/openstack-k8s-agent-tools/.claude/skills/plan-feature/SKILL.md && echo "plan-feature: MATCH" && diff /home/fmount/projects/openstack-k8s-agent-tools/skills/task-executor/SKILL.md /home/fmount/projects/openstack-k8s-agent-tools/.claude/skills/task-executor/SKILL.md && echo "task-executor: MATCH"
 ```
+
 Expected: both output "MATCH" (no diff)
 
 - [ ] **Step 4: Verify AGENT.md files reference correct skill names**
 
 Run:
+
 ```bash
 grep -c "plan-feature" /home/fmount/projects/openstack-k8s-agent-tools/agents/plan-feature/AGENT.md && grep -c "task-executor" /home/fmount/projects/openstack-k8s-agent-tools/agents/task-executor/AGENT.md
 ```
+
 Expected: both return non-zero counts
 
 - [ ] **Step 5: Run the existing skill validation script (regression check)**
@@ -903,7 +958,9 @@ Expected: existing skills still pass (this script does not yet cover plan-featur
 - [ ] **Step 6: Validate new SKILL.md frontmatter fields**
 
 Run:
+
 ```bash
 for skill in plan-feature task-executor; do echo "=== $skill ===" && head -8 /home/fmount/projects/openstack-k8s-agent-tools/skills/$skill/SKILL.md | grep -E "^(name|description|user-invocable|allowed-tools|context):" && echo "OK"; done
 ```
+
 Expected: both skills show all 5 required frontmatter fields

@@ -27,17 +27,20 @@ Comprehensive testing, linting, and quality assurance for openstack-k8s-operator
 ## Features
 
 ### Multi-Level Testing
+
 - **Quick**: `make fmt + vet + tidy` (~10 seconds)
 - **Standard**: Quick + `golangci + test` (~2-5 minutes)
 - **Full**: Standard + `operator-lint + crd-schema-check` (~5-10 minutes)
 
 ### Ginkgo Integration
+
 - Focused testing with patterns
 - Parallel execution support
 - Randomized test ordering
 - Coverage generation
 
 ### Linting Levels
+
 - `make fmt` - Code formatting
 - `make vet` - Static analysis
 - `make golangci` - Standard linting
@@ -45,12 +48,15 @@ Comprehensive testing, linting, and quality assurance for openstack-k8s-operator
 - `make operator-lint` - Operator-specific checks
 
 ### Security Scanning
+
 - `gosec` - Security vulnerability detection
 - `govulncheck` - Known vulnerability scanning
 - `staticcheck` - Advanced static analysis
 
 ### Auto-Fix
+
 Automatically fixes common issues:
+
 - Code formatting
 - Import organization
 - Dependency tidying
@@ -90,6 +96,7 @@ make crd-schema-check                        # Validate schemas
 ## Usage in Claude Code
 
 Invoke the skill:
+
 ```
 /test-operator quick
 /test-operator standard
@@ -103,17 +110,20 @@ Invoke the skill:
 ## Workflow Integration
 
 ### Development Loop
+
 1. Make changes
 2. `./test-workflow.sh quick` (fast feedback)
 3. Fix issues
 4. Repeat
 
 ### Pre-Commit
+
 1. `./test-workflow.sh standard`
 2. Fix any failures
 3. Commit changes
 
 ### Pre-PR
+
 1. `./test-workflow.sh full`
 2. `./test-workflow.sh security`
 3. `./test-workflow.sh coverage`
@@ -122,11 +132,13 @@ Invoke the skill:
 ## Tool Installation
 
 Install recommended tools:
+
 ```bash
 ./test-workflow.sh install-tools
 ```
 
 This installs:
+
 - gosec
 - govulncheck
 - staticcheck
@@ -136,6 +148,7 @@ This installs:
 ## Examples
 
 ### Quick Development Feedback
+
 ```bash
 # Fast iteration cycle
 ./test-workflow.sh quick
@@ -143,6 +156,7 @@ This installs:
 ```
 
 ### Focused Test Development
+
 ```bash
 # Work on specific test
 ./test-workflow.sh focus "initializes the status fields"
@@ -150,6 +164,7 @@ This installs:
 ```
 
 ### Pre-PR Validation
+
 ```bash
 # Complete validation
 ./test-workflow.sh full
@@ -161,6 +176,7 @@ go tool cover -html=coverage.out
 ```
 
 ### Auto-Fix Issues
+
 ```bash
 # Apply automatic fixes
 ./test-workflow.sh fix
@@ -182,16 +198,19 @@ git diff
 ## Common Issues
 
 ### Test Failures
+
 - Check `make test` output for specific failures
 - Use focused tests to debug: `./test-workflow.sh focus "failing test"`
 - Ensure test environment is clean
 
 ### Linting Errors
+
 - Run `./test-workflow.sh fix` to auto-fix simple issues
 - Check `.golangci.yaml` for configuration
 - Review operator-lint output for pattern violations
 
 ### Coverage Too Low
+
 - Identify uncovered code: `go tool cover -func=coverage.out`
 - Add tests for uncovered paths
 - Focus on critical code paths first
@@ -199,6 +218,7 @@ git diff
 ## Integration
 
 Works with other openstack-k8s-operators operator tools:
+
 - **debug-operator**: Use test failures to guide debugging
 - **code-style**: Enforce style before testing
 - **analyze-logs**: Parse test output for patterns

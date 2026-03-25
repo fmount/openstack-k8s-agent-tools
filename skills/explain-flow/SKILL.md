@@ -35,6 +35,7 @@ The skill includes a specialized parser (`code-parser.js`) that analyzes:
 ## Analysis Types
 
 ### 1. **Reconciler Flow Analysis**
+
 ```bash
 # Analyze specific controller
 node ./lib/code-parser.js /path/to/operator
@@ -44,18 +45,21 @@ grep -r "func.*Reconcile" --include="*.go" .
 ```
 
 ### 2. **Resource Lifecycle Mapping**
+
 - Resource creation and initialization
 - Status condition updates
 - Finalizer processing
 - Deletion and cleanup
 
 ### 3. **Decision Tree Visualization**
+
 - Conditional logic flow
 - Error path handling
 - Requeue strategies
 - State transitions
 
 ### 4. **Interaction Patterns**
+
 - Controller to controller communication
 - Webhook integration points
 - External API calls
@@ -73,19 +77,22 @@ I will generate:
 
 ## Common Patterns Identified
 
-### Controller Patterns:
+### Controller Patterns
+
 - `func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request)`
 - `client.Get()`, `client.Create()`, `client.Update()`, `client.Delete()`
 - `ctrl.Result{RequeueAfter: time.Duration}`
 - Status condition management
 
-### Error Handling Patterns:
+### Error Handling Patterns
+
 - `if err != nil` blocks
 - `return ctrl.Result{}, err`
 - Requeue strategies
 - Log error patterns
 
-### Resource Patterns:
+### Resource Patterns
+
 - Finalizer addition/removal
 - Owner reference management
 - Condition status updates

@@ -27,6 +27,7 @@ When testing an operator, I will systematically:
 Based on the openstack-k8s-operators operator Makefile conventions:
 
 ### Core Testing
+
 ```bash
 make test              # Run full test suite with Ginkgo
 make gotest            # Alias for test
@@ -34,6 +35,7 @@ make test GINKGO_ARGS="--focus 'pattern'"  # Focused tests
 ```
 
 ### Code Formatting
+
 ```bash
 make fmt               # Run go fmt
 make gofmt             # Run gofmt via CI tools (with checks)
@@ -41,6 +43,7 @@ make tidy              # Run go mod tidy
 ```
 
 ### Static Analysis
+
 ```bash
 make vet               # Run go vet
 make govet             # Run govet via CI tools
@@ -48,6 +51,7 @@ make operator-lint     # Run operator-specific linting
 ```
 
 ### Linting (Multiple Levels)
+
 ```bash
 make golangci          # Standard golangci-lint checks
 make golangci-lint     # Direct golangci-lint with --fix
@@ -55,6 +59,7 @@ make golint            # Additional Go linting
 ```
 
 ### Code Generation & Validation
+
 ```bash
 make manifests         # Generate CRDs, webhooks, RBAC
 make generate          # Generate DeepCopy methods
@@ -66,23 +71,27 @@ make crd-schema-check  # Validate CRD schema changes
 I will run a complete quality check workflow:
 
 ### Level 1: Quick Checks (Fast Feedback)
+
 1. `make fmt` - Format code
 2. `make vet` - Static analysis
 3. Quick syntax validation
 
 ### Level 2: Standard Checks (Pre-commit)
+
 1. `make gofmt` - Format validation
 2. `make govet` - Enhanced static analysis
 3. `make golangci` - Standard linting
 4. `make tidy` - Dependency check
 
 ### Level 3: Comprehensive Checks (Pre-PR)
+
 1. `make golangci-lint` - Full linting with auto-fix
 2. `make operator-lint` - Operator-specific patterns
 3. `make test` - Full test suite
 4. `make crd-schema-check` - Schema validation
 
 ### Level 4: Security & Advanced (CI/CD)
+
 1. Security scanning (gosec, staticcheck)
 2. Vulnerability detection (govulncheck)
 3. Code complexity analysis (gocyclo)
@@ -91,6 +100,7 @@ I will run a complete quality check workflow:
 ## Ginkgo Testing Patterns
 
 ### Basic Test Execution
+
 ```bash
 # Run all tests
 make test
@@ -109,6 +119,7 @@ make test GINKGO_ARGS="--randomize-all"
 ```
 
 ### Advanced Ginkgo Usage
+
 ```bash
 # Focused testing with pattern
 make test GINKGO_ARGS="--focus 'initializes the status fields'"
@@ -131,6 +142,7 @@ make test GINKGO_ARGS="-v --trace --output-interceptor-mode=none"
 The skill recognizes common golangci-lint checks:
 
 ### Enabled Linters (Recommended)
+
 - **errcheck**: Check for unchecked errors
 - **gosimple**: Simplify code
 - **govet**: Report suspicious constructs
@@ -143,6 +155,7 @@ The skill recognizes common golangci-lint checks:
 - **goimports**: Check import formatting
 
 ### Security & Quality Linters
+
 - **gosec**: Security issues detection
 - **revive**: Fast, extensible linter
 - **stylecheck**: Style consistency
@@ -152,6 +165,7 @@ The skill recognizes common golangci-lint checks:
 - **gocyclo**: Cyclomatic complexity
 
 ### Operator-Specific Checks
+
 - **operator-lint**: Kubernetes operator patterns
 - Custom rules for controller-runtime
 - Finalizer usage validation
@@ -214,6 +228,7 @@ git diff --exit-code api/ config/
 ## Automated Test Workflows
 
 ### Quick Test Loop (Development)
+
 1. Make code changes
 2. `make fmt` - Format
 3. `make vet` - Quick validation
@@ -221,6 +236,7 @@ git diff --exit-code api/ config/
 5. Iterate
 
 ### Pre-Commit Workflow
+
 1. `make fmt` - Format code
 2. `make tidy` - Clean dependencies
 3. `make vet` - Static analysis
@@ -229,6 +245,7 @@ git diff --exit-code api/ config/
 6. Stage and commit changes
 
 ### Pre-PR Workflow
+
 1. `make manifests generate` - Regenerate code
 2. Check for uncommitted changes
 3. `make golangci-lint` - Full lint with fixes
@@ -240,6 +257,7 @@ git diff --exit-code api/ config/
 ## Common Issues Detected
 
 ### Code Quality
+
 - Unchecked errors
 - Unused variables and imports
 - Inefficient code patterns
@@ -247,6 +265,7 @@ git diff --exit-code api/ config/
 - Code duplication
 
 ### Operator-Specific
+
 - Missing finalizer handling
 - Incorrect status condition usage
 - Improper error wrapping
@@ -254,6 +273,7 @@ git diff --exit-code api/ config/
 - Webhook validation issues
 
 ### Security
+
 - SQL injection vulnerabilities
 - Hardcoded credentials
 - Insecure random number generation
@@ -261,6 +281,7 @@ git diff --exit-code api/ config/
 - Known CVE dependencies
 
 ### Testing
+
 - Failing test cases
 - Flaky tests (randomization issues)
 - Missing test coverage
@@ -270,36 +291,42 @@ git diff --exit-code api/ config/
 ## Usage Examples
 
 ### Quick Test Mode
+
 ```bash
 /test-operator quick
 # Runs: fmt + vet + focused tests
 ```
 
 ### Standard Test Mode
+
 ```bash
 /test-operator standard
 # Runs: fmt + vet + golangci + test
 ```
 
 ### Full Test Mode
+
 ```bash
 /test-operator full
 # Runs: All checks + security + coverage
 ```
 
 ### Focused Test
+
 ```bash
 /test-operator focus "initializes the status fields"
 # Runs specific test pattern with Ginkgo
 ```
 
 ### Lint Only
+
 ```bash
 /test-operator lint
 # Runs: golangci-lint + operator-lint
 ```
 
 ### Security Scan
+
 ```bash
 /test-operator security
 # Runs: gosec + govulncheck + dependency check
@@ -326,6 +353,7 @@ git diff --exit-code api/ config/
 ## Reporting
 
 I will provide:
+
 - Test execution summary
 - Failing test details with line numbers
 - Linting issues categorized by severity

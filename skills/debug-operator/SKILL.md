@@ -25,19 +25,22 @@ When debugging or developing an operator, I will:
 
 The skill includes automated workflows (`dev-workflow.sh`) for:
 
-### Complete Workflow:
+### Complete Workflow
+
 - `run_full_workflow` - End-to-end development validation
 - `run_precommit_checks` - Syntax and style validation
 - `generate_manifests` - Run `make manifests && make generate`
 - `check_build` - Verify operator compilation
 
-### Testing:
+### Testing
+
 - `run_operator_tests` - Execute `make test`
 - `focus_test '<pattern>'` - Run specific tests with Ginkgo focus
 - `check_test_coverage` - Generate test coverage reports
 - `show_tests` - List available test patterns
 
-### Quality Assurance:
+### Quality Assurance
+
 - `run_linting` - Code style and quality checks
 - `check_go_modules` - Validate dependencies with `go mod`
 - `validate_crds` - Validate Custom Resource Definitions
@@ -53,6 +56,16 @@ For deployed operators, I will also:
 5. **Resource Inspection**: Examine custom resources and their conditions
 6. **Event Review**: Check Kubernetes events for issues
 7. **RBAC Verification**: Ensure proper permissions are in place
+
+When debugging deployed operators:
+
+```bash
+# Debug specific operator
+/debug-operator nova-operator openstack
+
+# General cluster debugging
+/debug-operator cluster-check
+```
 
 ## Automated Analysis
 
@@ -95,8 +108,10 @@ get_operator_events [namespace] [hours]
 
 ## Usage Examples
 
-### Development Mode:
+### Development Mode
+
 When in an operator directory (with Makefile and go.mod):
+
 ```bash
 # Run complete development workflow
 /debug-operator
@@ -106,16 +121,6 @@ When in an operator directory (with Makefile and go.mod):
 
 # Run only tests
 /debug-operator test-only
-```
-
-### Runtime Debugging:
-When debugging deployed operators:
-```bash
-# Debug specific operator
-/debug-operator nova-operator openstack
-
-# General cluster debugging
-/debug-operator cluster-check
 ```
 
 ## Workflow Detection
@@ -130,6 +135,7 @@ I will automatically:
 ## Integration with openstack-k8s-operators Ecosystem
 
 The skill integrates with:
+
 - **openstack-k8s-operators** development practices
 - **lib-common** patterns and conventions
 - **Ginkgo** testing framework workflows

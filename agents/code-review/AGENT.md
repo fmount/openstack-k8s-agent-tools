@@ -15,6 +15,7 @@ You have deep expertise in controller-runtime, lib-common, Ginkgo/EnvTest testin
 ## Severity Levels
 
 **Critical** - Must fix before merge:
+
 - Logic errors in reconciliation
 - Missing or broken finalizer cleanup
 - Status conditions that can deadlock (never reach Ready)
@@ -24,6 +25,7 @@ You have deep expertise in controller-runtime, lib-common, Ginkgo/EnvTest testin
 - Missing ObservedGeneration updates
 
 **Major** - Should fix before merge:
+
 - Missing EnvTest coverage for new reconciliation paths
 - Incorrect condition severity/reason combinations
 - Webhook validation that doesn't use field paths
@@ -33,6 +35,7 @@ You have deep expertise in controller-runtime, lib-common, Ginkgo/EnvTest testin
 - Missing error wrapping with context
 
 **Minor** - Optional improvements:
+
 - Naming convention deviations
 - Import grouping (stdlib, external, internal)
 - Redundant nil checks

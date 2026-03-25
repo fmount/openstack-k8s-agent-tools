@@ -7,6 +7,7 @@ Contributions are welcome. Here's how to get started.
 1. Fork the repository
 2. Clone your fork and create a feature branch
 3. Install the plugin locally for testing:
+
    ```bash
    ./scripts/install.sh --claude-code
    ```

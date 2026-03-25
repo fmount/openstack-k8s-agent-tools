@@ -24,7 +24,8 @@ When analyzing logs, I will:
 
 The skill includes comprehensive patterns for:
 
-### Error Detection:
+### Error Detection
+
 - **API Connectivity**: Connection refused, dial failures
 - **RBAC Issues**: Permission denied, forbidden access
 - **Resource Problems**: Not found, validation failures
@@ -32,13 +33,15 @@ The skill includes comprehensive patterns for:
 - **Image Issues**: Pull failures, registry access
 - **Webhook Failures**: Admission controller errors
 
-### Performance Analysis:
+### Performance Analysis
+
 - **Slow Reconciliation**: >30s reconciliation times
 - **Queue Issues**: Large queue depths (>100 items)
 - **API Latency**: Slow Kubernetes API responses
 - **Resource Conflicts**: Optimistic locking failures
 
-### OpenStack Specific:
+### OpenStack Specific
+
 - **Openstack Service**: Openstack service failures (Glance, Nova, Cinder, Manila)
 - **Keystone Auth**: Authentication/authorization issues
 - **Database**: Connection and SQL errors
@@ -61,25 +64,29 @@ node ./lib/log-analyzer.js --patterns
 
 ## Analysis Output
 
-### Summary Report:
+### Summary Report
+
 - Total log lines processed
 - Error/warning/success counts
 - Critical issue identification
 - Performance metric extraction
 
-### Detailed Findings:
+### Detailed Findings
+
 - Line-by-line issue mapping
 - Severity classification (critical/high/medium/low)
 - Category grouping (permissions/connectivity/performance)
 - Specific remediation suggestions
 
-### Timeline View:
+### Timeline View
+
 - Chronological event sequence
 - Error clustering analysis
 - Performance degradation tracking
 - Service health transitions
 
-### Recommendations:
+### Recommendations
+
 - **Critical**: Immediate action required (panics, crashes)
 - **High**: Service impacting (RBAC, connectivity)
 - **Medium**: Performance concerns (slow reconciliation)
@@ -88,12 +95,14 @@ node ./lib/log-analyzer.js --patterns
 ## Usage Patterns
 
 ### 1. **Real-time Log Analysis**
+
 ```bash
 # Stream and analyze live logs
 kubectl logs -f deployment/operator-name | node log-analyzer.js -
 ```
 
 ### 2. **Historical Analysis**
+
 ```bash
 # Analyze collected logs
 kubectl logs deployment/operator-name --since=1h > operator.log
@@ -101,6 +110,7 @@ node log-analyzer.js --verbose operator.log
 ```
 
 ### 3. **Multi-Pod Analysis**
+
 ```bash
 # Analyze logs from all operator pods
 kubectl logs -l app=operator --all-containers=true > combined.log
@@ -108,6 +118,7 @@ node log-analyzer.js combined.log
 ```
 
 ### 4. **Pattern-Specific Search**
+
 ```bash
 # Focus on specific issue types
 grep -E "(error|panic|failed)" operator.log | node log-analyzer.js -
@@ -123,6 +134,7 @@ grep -E "(error|panic|failed)" operator.log | node log-analyzer.js -
 ## Intelligent Insights
 
 The skill provides:
+
 - **Correlation Analysis**: Link related errors across time
 - **Trend Detection**: Identify recurring patterns
 - **Performance Baselines**: Compare against normal behavior

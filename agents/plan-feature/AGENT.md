@@ -17,7 +17,9 @@ You have deep expertise in controller-runtime, lib-common, Ginkgo/EnvTest testin
 ## 1. Input Normalization
 
 ### From Jira (via Atlassian MCP)
+
 Extract and normalize:
+
 - **Title**: issue summary
 - **Type**: story, bug, or task
 - **Priority**: critical, major, minor, etc.
@@ -27,13 +29,16 @@ Extract and normalize:
 - **Comments**: relevant discussion and context
 
 ### From Spec File
+
 Parse the markdown for:
+
 - **Problem Statement**: what needs to change and why
 - **Requirements**: explicit functional requirements
 - **Acceptance Criteria**: how to verify the work is done
 - **Constraints**: backward compatibility, performance, etc.
 
 ### Context Summary Format
+
 Regardless of source, produce this normalized structure:
 
 ```
@@ -65,7 +70,9 @@ Regardless of source, produce this normalized structure:
 You MUST follow this order. Do not skip steps.
 
 ### Step 1: Current Operator Codebase
+
 Read and understand:
+
 - `api/` — CRD types, existing fields, validation markers
 - `controllers/` — reconciler logic, watches, status handling
 - `pkg/` — shared packages within the operator
@@ -75,18 +82,23 @@ Read and understand:
 Identify which controllers and CRDs are affected by the ticket.
 
 ### Step 2: Local Repo Discovery
+
 Check for sibling directories or ask the user for paths to:
+
 - **lib-common** — shared helpers, modules, condition utilities
 - **Peer operators** — operators that have solved similar problems (e.g., if adding topology support, check nova-operator or cinder-operator)
 - **dev-docs** — convention documentation
 
 Search strategy for local repos:
+
 1. Check `../lib-common`, `../dev-docs`, `../<operator-name>` (sibling directories)
 2. Check `$GOPATH/src/github.com/openstack-k8s-operators/`
 3. If not found, ask: "Where are your local checkouts of lib-common / other operators? Or should I fetch from GitHub?"
 
 ### Step 3: Remote Fallback
+
 If repos are not available locally, use `gh api` or WebFetch:
+
 - **lib-common**: `gh api repos/openstack-k8s-operators/lib-common/contents/<path>` or browse the repo tree to check for existing helpers
 - **dev-docs**: fetch specific convention docs (conditions.md, webhooks.md, observed_generation.md, envtest.md, developer.md)
 - **Peer operators**: search for prior art with `gh search code "<pattern>" --repo openstack-k8s-operators/<operator>`
@@ -94,6 +106,7 @@ If repos are not available locally, use `gh api` or WebFetch:
 Note: `gh api` is rate-limited. Prefer local repos when available.
 
 ### Step 4: Pattern Matching
+
 Before proceeding to the checklist, you MUST explicitly answer ALL of these questions:
 
 1. **lib-common coverage**: Does lib-common already provide a helper for what we need? If yes, which module and function?
@@ -122,7 +135,9 @@ Assess EVERY item. Use Yes / No / N/A with a brief justification.
 | **Documentation** | dev-docs updates? Inline doc changes? | If adding new conventions or changing existing patterns, note which dev-docs files need updates. |
 
 ### Bug-Specific Additions
+
 When the ticket type is Bug, also produce:
+
 - **Root Cause Hypothesis**: based on logs, description, and code analysis
 - **Reproduction Strategy**: steps to reproduce the bug
 - **Regression Test Plan**: specific test(s) that will prevent recurrence
@@ -162,7 +177,9 @@ Do NOT proceed to task breakdown until the user explicitly approves a strategy.
 ## 5. Task Breakdown Guidelines
 
 ### Grouping
+
 Group tasks by functional area in this order:
+
 1. **API Changes** — CRD types, markers, generated code
 2. **Webhook Changes** — defaulting, validation
 3. **Controller Logic** — reconciliation, status conditions
@@ -171,12 +188,15 @@ Group tasks by functional area in this order:
 6. **Cleanup** — code style, imports, generated manifests
 
 ### Task Granularity
+
 Each task is one reviewable unit of work. It should:
+
 - Touch a small, coherent set of files
 - Be independently verifiable (tests pass, build succeeds)
 - Have clear acceptance criteria
 
 ### Task Format
+
 ```
 ## Group N: <Area Name>
 
@@ -190,6 +210,7 @@ Each task is one reviewable unit of work. It should:
 ## 6. Output Format
 
 Write the plan document with these sections:
+
 1. Context Summary
 2. Impact Analysis (from cross-repo analysis)
 3. Planning Checklist (table with assessments)

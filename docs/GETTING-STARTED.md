@@ -28,6 +28,7 @@
 ```
 
 **Make targets**:
+
 ```bash
 make fmt vet test golangci operator-lint
 make test GINKGO_ARGS="--focus 'pattern'"
@@ -101,21 +102,25 @@ node ./lib/code-parser.js controllers/
 ## Common Workflows
 
 **Development loop**:
+
 ```bash
 /test-operator quick -> /debug-operator focus-test "..." -> iterate
 ```
 
 **Pre-commit**:
+
 ```bash
 /test-operator standard && /code-style
 ```
 
 **Pre-PR**:
+
 ```bash
 /debug-operator && /test-operator full && /code-review
 ```
 
 **Debugging**:
+
 ```bash
 kubectl logs pod > log.txt
 /analyze-logs -> /explain-flow -> /debug-operator

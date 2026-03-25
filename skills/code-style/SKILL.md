@@ -13,9 +13,11 @@ This skill applies and enforces Go code style best practices for openstack-k8s-o
 ## Code Style Guidelines
 
 ### 1. **Modern Go Syntax**
+
 Based on gopls modernize and lib-common patterns:
 
-#### Slice Declaration:
+#### Slice Declaration
+
 ```go
 // ❌ Old style
 var items []string = []string{}
@@ -24,7 +26,8 @@ var items []string = []string{}
 var items []string
 ```
 
-#### Map Declaration:
+#### Map Declaration
+
 ```go
 // ❌ Old style
 var configs map[string]interface{} = make(map[string]interface{})
@@ -33,7 +36,8 @@ var configs map[string]interface{} = make(map[string]interface{})
 var configs = make(map[string]interface{})
 ```
 
-#### String Building:
+#### String Building
+
 ```go
 // ❌ Inefficient concatenation
 result := ""
@@ -52,7 +56,8 @@ result := builder.String()
 
 ### 2. **Controller-Runtime Patterns**
 
-#### Error Handling:
+#### Error Handling
+
 ```go
 // ✅ Proper error wrapping
 if err := r.Get(ctx, req.NamespacedName, &instance); err != nil {
@@ -63,14 +68,16 @@ if err := r.Get(ctx, req.NamespacedName, &instance); err != nil {
 }
 ```
 
-#### Logging:
+#### Logging
+
 ```go
 // ✅ Structured logging with context
 log := ctrl.LoggerFrom(ctx).WithValues("instance", instance.Name)
 log.Info("Starting reconciliation")
 ```
 
-#### Status Updates:
+#### Status Updates
+
 ```go
 // ✅ Proper status condition handling
 meta.SetStatusCondition(&instance.Status.Conditions, metav1.Condition{
@@ -83,7 +90,8 @@ meta.SetStatusCondition(&instance.Status.Conditions, metav1.Condition{
 
 ### 3. **openstack-k8s-operators Operator Conventions**
 
-#### Finalizer Handling:
+#### Finalizer Handling
+
 ```go
 // ✅ Consistent finalizer pattern
 const FinalizerName = "operator.openstack.org/finalizer"
@@ -98,7 +106,8 @@ if !controllerutil.ContainsFinalizer(&instance, FinalizerName) {
 }
 ```
 
-#### Resource Management:
+#### Resource Management
+
 ```go
 // ✅ Proper owner references
 if err := ctrl.SetControllerReference(&instance, resource, r.Scheme); err != nil {
@@ -108,7 +117,8 @@ if err := ctrl.SetControllerReference(&instance, resource, r.Scheme); err != nil
 
 ### 4. **Testing Patterns**
 
-#### Ginkgo Best Practices:
+#### Ginkgo Best Practices
+
 ```go
 // ✅ Descriptive test structure
 var _ = Describe("Nova Controller", func() {
@@ -124,7 +134,8 @@ var _ = Describe("Nova Controller", func() {
 })
 ```
 
-#### Mock Usage:
+#### Mock Usage
+
 ```go
 // ✅ Proper interface mocking
 //go:generate mockery --name=ServiceInterface --output=../mocks
@@ -138,29 +149,34 @@ type ServiceInterface interface {
 The skill provides automated fixes for:
 
 ### 1. **Modernization**
+
 - Convert old slice/map declarations
 - Update string concatenation to use strings.Builder
 - Fix inefficient loops and patterns
 - Apply gopls modernize suggestions
 
 ### 2. **Imports**
+
 - Organize imports according to Go conventions
 - Remove unused imports
 - Group standard, third-party, and local imports
 
 ### 3. **Variable Naming**
+
 - Apply Go naming conventions
 - Fix exported vs unexported naming
 - Ensure consistent abbreviations
 
 ### 4. **Function Signatures**
+
 - Add context parameters where missing
 - Proper error return patterns
 - Consistent receiver naming
 
 ## Style Enforcement Tools
 
-### Built-in Analyzers:
+### Built-in Analyzers
+
 ```bash
 # Run style analysis
 gopls check <file>
@@ -172,7 +188,8 @@ gopls fix -a fillstruct,unusedparam <file>
 golangci-lint run --enable-all
 ```
 
-### Custom Rules:
+### Custom Rules
+
 - openstack-k8s-operators-specific patterns
 - Controller-runtime best practices
 - OpenStack operator conventions
@@ -180,7 +197,8 @@ golangci-lint run --enable-all
 
 ## Integration with Development Workflow
 
-### Pre-commit Hooks:
+### Pre-commit Hooks
+
 ```yaml
 # .pre-commit-config.yaml
 repos:
@@ -193,7 +211,8 @@ repos:
         files: '\.go$'
 ```
 
-### IDE Configuration:
+### IDE Configuration
+
 ```json
 // VSCode settings for openstack-k8s-operators operators
 {
@@ -218,7 +237,8 @@ Invoke `/code-style` to:
 3. **Generate Style Report**: Detailed analysis with specific recommendations
 4. **Create Action Items**: Use TodoWrite to track style improvements
 
-### Examples:
+### Examples
+
 ```bash
 # Analyze entire project
 /code-style analyze-project
@@ -236,6 +256,7 @@ Invoke `/code-style` to:
 ## Reference Documentation
 
 Based on:
+
 - [lib-common patterns](https://github.com/openstack-k8s-operators/lib-common)
 - [gopls modernize](https://github.com/openstack-k8s-operators/lib-common/pull/646)
 - [openstack-k8s-operators conventions](https://github.com/openstack-k8s-operators/dev-docs)
