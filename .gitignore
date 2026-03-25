@@ -1,12 +1,1 @@
-# Claude Code local settings (user-specific)
-.claude/settings.local.json
-
-# Node
-node_modules/
-
-# Coverage
-coverage.out
-cover.out
-
-# OS
-.DS_Store
+.claude
