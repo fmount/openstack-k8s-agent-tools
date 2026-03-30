@@ -19,7 +19,26 @@ To update to the latest version:
 claude plugin update openstack-k8s-agent-tools
 ```
 
-<!-- TODO: add manual install and OpenCode support when install.sh is ready -->
+### OpenCode
+
+```bash
+git clone https://github.com/fmount/openstack-k8s-agent-tools.git
+cd openstack-k8s-agent-tools
+make install-opencode
+```
+
+### Manual install (Claude Code, without marketplace)
+
+```bash
+make install-claude
+```
+
+### Project-local install
+
+```bash
+make install-project-claude    # .claude/skills/ + .claude/agents/
+make install-project-opencode  # .opencode/skills/ + .opencode/agents/
+```
 
 ## Dependencies
 
@@ -170,7 +189,7 @@ write code --> /test-operator quick --> /test-operator focus "..." --> /code-sty
 
 ## Roadmap
 
-- [ ] `install.sh` — manual installation script with platform support (Claude Code, OpenCode, others)
+- [x] `install.sh` — manual installation script with platform support (Claude Code, OpenCode)
 - [ ] Session management for `/feature` and `/task-executor`
 - [ ] Jira sub-task export from task breakdowns
 - [ ] Plan diffing (detect Jira ticket changes after plan creation)
