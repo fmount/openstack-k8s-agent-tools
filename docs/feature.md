@@ -162,12 +162,12 @@ Plan features and bug fixes for openstack-k8s-operators operators with Jira inte
 
 ## Use Case: Adding Topology Support to an Operator
 
-You're working on `heat-operator` and need to add topology/affinity support (Jira: `OSPRH-4567`).
+You're working on `glance-operator` and need to add topology/affinity support (Jira: `OSPRH-4567`).
 
 ### Step 1: Invoke the skill
 
 ```bash
-cd ~/go/src/github.com/openstack-k8s-operators/heat-operator
+cd ~/go/src/github.com/openstack-k8s-operators/glance-operator
 /feature OSPRH-4567
 ```
 
@@ -181,16 +181,16 @@ cd ~/go/src/github.com/openstack-k8s-operators/heat-operator
 **Priority:** Major
 
 ### Problem Statement
-Heat operator does not support topology spread constraints or pod affinity.
+Glance operator does not support topology spread constraints or pod affinity.
 Deployers need control over pod placement for HA configurations.
 
 ### Requirements
-1. Add topology/affinity fields to HeatAPI and HeatEngine specs
+1. Add topology/affinity fields to GlanceAPI and GlanceInternal specs
 2. Follow the lib-common topology CR pattern
 3. Propagate topology constraints to generated pods
 
 ### Acceptance Criteria
-- [ ] HeatAPI and HeatEngine specs accept topology overrides
+- [ ] GlanceAPI and GlanceInternal specs accept topology overrides
 - [ ] Pods are scheduled respecting topology constraints
 - [ ] EnvTest coverage for topology reconciliation
 ```
@@ -202,8 +202,8 @@ The skill checks your local checkouts (or GitHub) and reports:
 ```
 ## Impact Analysis
 
-**Affected controllers:** HeatAPI, HeatEngine
-**Affected API types:** HeatAPISpec, HeatEngineSpec
+**Affected controllers:** GlanceAPI, GlanceInternal
+**Affected API types:** GlanceAPISpec, GlanceInternalSpec
 
 **lib-common:** common/affinity and common/topology modules already provide
 TopologySpreadConstraints helpers — use these, do not reimplement.
@@ -219,7 +219,7 @@ pattern is established in lib-common.
 
 | Principle | Assessment |
 |-----------|-----------|
-| API Changes | **Yes** — add `TopologyRef` field to HeatAPISpec and HeatEngineSpec |
+| API Changes | **Yes** — add `TopologyRef` field to GlanceAPISpec and GlanceInternalSpec |
 | lib-common Reuse | **Yes** — use `common/topology` module |
 | Code Duplication | **Yes** — nova-operator has the same pattern, follow it |
 | Webhook Changes | **Yes** — add defaulting for topology fields |
@@ -236,7 +236,7 @@ The skill proposes approaches (e.g., "follow nova-operator exactly" vs "simplifi
 
 ```
 ## Group 1: API Changes
-- [ ] Task 1.1: Add TopologyRef to HeatAPISpec and HeatEngineSpec
+- [ ] Task 1.1: Add TopologyRef to GlanceAPISpec and GlanceInternalSpec
 - [ ] Task 1.2: Run make manifests generate
 - [ ] Task 1.3: Add webhook defaulting for topology fields
 

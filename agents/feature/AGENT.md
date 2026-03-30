@@ -2,6 +2,8 @@
 name: feature
 description: Plans features and bug fixes for openstack-k8s-operators with cross-repo analysis, structured checklist, and implementation strategies.
 model: inherit
+skills:
+  - jira
 ---
 
 # openstack-k8s-operators Feature Agent

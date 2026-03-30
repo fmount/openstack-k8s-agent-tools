@@ -2,6 +2,8 @@
 name: task-executor
 description: Executes implementation plans task-by-task with checkpointing, code quality enforcement, and resumability.
 model: inherit
+skills:
+  - jira
 ---
 
 # openstack-k8s-operators Task Executor Agent
@@ -337,11 +339,16 @@ After the commit is approved:
 
 ### Jira Comment (Optional)
 
-If the plan was sourced from a Jira ticket:
-1. Ask the user: "Want me to post a brief summary of the outcome as a comment on <TICKET-ID>?"
-2. If yes, compose a concise comment with: what was done, key files changed, and the commit SHA
-3. Post via Atlassian MCP
-4. If MCP is not available, provide the comment text for the user to paste manually
+If the plan was sourced from a Jira ticket, follow the `/jira` skill hierarchy rules:
+
+1. **Validate the target ticket** — outcome comments go on the **Story/Task/Bug (Level 2)**, never on Epic (Level 3) or Feature (Level 4). If the original ticket was an Epic or Feature, find the relevant Story.
+2. Ask the user: "Want me to post a brief summary of the outcome as a comment on <TICKET-ID>?"
+3. If yes, compose a concise comment with: what was done, key files changed, and the commit SHA
+4. **Present the comment for human approval** — NEVER post anything to Jira without explicit approval
+5. Post via Atlassian MCP only after the user approves the exact comment text
+6. If MCP is not available, provide the comment text for the user to paste manually
+
+**Do NOT create sub-tasks.** If the user wants plan tasks tracked in Jira, suggest creating separate Stories under the same Epic.
 
 ## 9. Behavioral Rules
 

@@ -1,6 +1,6 @@
 ---
 name: jira
-description: Jira integration for openstack-k8s-operators workflows. Reads tickets, validates hierarchy (epic/story/task), posts outcome comments, and suggests story/task creation. Used by /feature and /task-executor as a shared reference.
+description: Jira integration for openstack-k8s-operators workflows. Reads tickets, validates hierarchy (feature/epic/story), posts outcome comments, and suggests story creation.
 user-invocable: true
 allowed-tools: ["Bash", "Read", "Write", "Grep"]
 context: fork
@@ -10,166 +10,214 @@ Jira integration skill for openstack-k8s-operators development workflows.
 
 When invoked directly (`/jira OSPRH-2345`), inspect the ticket and report its type, hierarchy, and linked issues. When used as a reference by other skills, follow the rules below.
 
+## Prerequisites
+
+**Human approval is REQUIRED for all write operations.** Never post comments, create stories, update tickets, or modify any Jira resource without presenting the exact content to the human operator and receiving explicit approval first. Read operations (fetching tickets, inspecting hierarchy) do not require approval.
+
+## Issue Hierarchy
+
+```
+Feature / Initiative
+  |
+  |  Feature
+  |  Initiative
+  |
+  +-- Epic
+  |     |
+  |     |  Groups stories/tasks/bugs for a single release
+  |     |  Must be scoped to a single release
+  |     |
+  |     +-- Story / Task
+  |     |     Actual engineering work, maps to PR(s)
+  |     |     Story and Task are interchangeable
+  |     |
+  |     +-- Bug
+  |           Defect (same level as Story, different workflow)
+  |
+  +-- Epic
+        ...
+```
+
+### Key Rules
+
+1. **Sub-tasks are NOT used.** Do not create sub-tasks.
+
+2. **Story and Task are interchangeable.** No semantic difference. Teams may have local conventions, but they are not generalizable.
+
+3. **Outcome comments go on the Story/Task/Bug, never on Epic or Feature.** The Story is where engineering work is tracked. The Epic is a container. The Feature is PM-owned.
+
+4. **If the input ticket is a Feature**, find its child Epics. If there's a relevant Epic, find its Stories. Guide the user down to the right Story to work on.
+
+5. **If the input ticket is an Epic with no child Stories**, the user should create a Story under it before starting implementation.
+
+6. **Bugs follow their own workflow** (New, Refinement, Planning, Backlog, In Progress, Review, Verified, Closed) but are at the same level as Stories for hierarchy purposes.
+
+7. **Bug evaluation — check sibling Stories.** When a Bug has a parent Epic, check the Epic's other children (sibling Stories). Determine if any existing Stories already cover the work needed to fix the bug. If yes, link the Bug to those Stories and note the relationship. If no existing Story covers the fix, suggest creating new Stories under the same Epic for the required work.
+
+8. **Plan breakdown items become separate Stories under the Epic**, not sub-tasks.
+
 ## Ticket Inspection
 
 When given a ticket ID:
 
 1. Fetch the ticket via Atlassian MCP
-2. Report: type (epic/story/task/bug), summary, status, priority
-3. Show hierarchy: parent epic (if any), linked stories, sub-tasks
-4. Flag any hierarchy issues (see Hierarchy Rules below)
+2. Report: type, summary, status, priority, fixVersion
+3. Show hierarchy: parent (Feature/Epic), children (Epics/Stories)
+4. Flag hierarchy issues per the rules above
 
-## Hierarchy Rules
-
-openstack-k8s-operators Jira follows this structure:
-
-```
-Epic (OSPRH-1000)
-  represents a large feature or initiative
-  |
-  +-- Story (OSPRH-2345)
-  |     represents a single deliverable unit of work
-  |     maps to one PR (or a small set of related PRs)
-  |     |
-  |     +-- Task (OSPRH-2346)   optional, from plan breakdown
-  |     +-- Task (OSPRH-2347)
-  |
-  +-- Story (OSPRH-2350)
-```
-
-### Key Rules
-
-1. **Comments go on the Story, never on the Epic.** The story is the unit of work that maps to a PR. The epic is the container — it doesn't need implementation details.
-
-2. **If the ticket is an Epic with no linked Story**, the user should create a story first. Do NOT post outcome comments directly on epics.
-
-3. **If the ticket is a Story**, it should be linked to an Epic (warn if orphaned, but proceed).
-
-4. **Tasks are optional.** Each task in the plan breakdown *can* become a Jira task under the story, but only if the user explicitly requests it.
-
-5. **Bugs follow story rules.** A bug is treated like a story for hierarchy purposes — it should be linked to an epic and receives outcome comments.
-
-## Operations
-
-### Read Ticket
-
-Fetch and normalize a Jira ticket into a structured summary:
+Example output:
 
 ```
 Ticket: OSPRH-2345
 Type: Story
 Status: In Progress
 Priority: Major
-Summary: Add topology support to HeatAPI
-Epic: OSPRH-1000 (Heat operator enhancements)
-Sub-tasks: none
+fixVersion: 18.0.1
+Summary: Add topology support to GlanceAPI
+Parent Epic: OSPRH-1000 (Glance operator enhancements)
+Linked Stories: OSPRH-2346, OSPRH-2347
+
+Hierarchy: OK — Story linked to Epic
 ```
 
-If the Atlassian MCP is not available, report the error and suggest the user provide the ticket details manually.
+## Operations
 
 ### Validate Hierarchy
 
-Before any write operation, check the hierarchy:
+Before any write operation, that must be approved by the human operator, check the hierarchy:
+
+**Story/Task/Bug — OK to work on:**
 
 ```
 Hierarchy check for OSPRH-2345:
   Type: Story
-  Parent epic: OSPRH-1000 (Heat operator enhancements)
-  Status: OK — story is linked to an epic
+  Parent Epic: OSPRH-1000
+  Status: OK — proceed with planning/implementation
 ```
 
-Or:
+**Epic — needs a Story:**
 
 ```
 Hierarchy check for OSPRH-1000:
   Type: Epic
-  Linked stories: none
-  Status: WARNING — this is an epic with no stories.
-    A story should be created under this epic before
-    posting implementation outcomes.
-```
+  Child Stories: none
+  Status: WARNING — create a Story under this Epic before
+    starting implementation.
 
-When the ticket is an epic with no stories, suggest creating one:
-
-```
-This ticket is an Epic. To track implementation work, create a Story under it:
-
+Suggested Story:
   Project: OSPRH
   Type: Story
   Summary: <suggested based on plan context>
   Epic Link: OSPRH-1000
+  fixVersion: <from Epic>
   Description: <suggested based on plan context>
 
 Create this story in Jira, then re-run with the story ID.
 ```
 
-Do NOT create the story automatically — provide the fields and let the user create it.
+**Feature — needs navigation down:**
+
+```
+Hierarchy check for OSPRH-500:
+  Type: Feature
+  Child Epics:
+    - OSPRH-1000: Glance operator enhancements (In Progress)
+    - OSPRH-1001: Glance API v2 migration (Backlog)
+  Status: INFO — this is a Feature. Pick the relevant Epic,
+    then find or create a Story under it.
+
+Which Epic is this work related to?
+```
 
 ### Post Outcome Comment
 
-When `/task-executor` completes implementation and the user approves posting to Jira:
+When `/task-executor` completes implementation and the user approves posting:
 
-1. **Validate hierarchy** — ensure the target is a story or bug, not an epic
+1. **Validate hierarchy** — target MUST be a Story, Task, or Bug. Refuse to post on Epics or Features.
 2. **Compose the comment:**
 
 ```
-Implementation completed for OSPRH-2345.
+Implementation completed.
 
 Commit: abc1234
 Branch: feature/topology-support
 
 Summary:
-- Added TopologyRef field to HeatAPISpec and HeatEngineSpec
+- Added TopologyRef field to GlanceAPISpec and GlanceSpec
 - Reconciler propagates topology constraints to pod specs
 - EnvTest coverage for topology reconciliation path
 
 Files changed:
-- api/v1beta1/heatapi_types.go
-- controllers/heatapi_controller.go
-- test/functional/heatapi_controller_test.go
-
-Plan: ~/.local/share/openstack-k8s-agent-tools/plans/heat-operator/2026-03-25-OSPRH-2345-plan.md
+- api/v1beta1/glanceapi_types.go
+- controllers/glanceapi_controller.go
+- test/functional/glanceapi_controller_test.go
 ```
 
-3. **Present to the user for approval** before posting
-4. Post via Atlassian MCP if approved
-5. If MCP is not available, provide the comment text for manual pasting
+1. **Present to the user for approval** before posting
+2. Post via Atlassian MCP if approved
+3. If MCP is not available, provide the comment text for manual pasting
 
-### Suggest Task Creation
+### Suggest Story Creation
 
-When the user wants to export plan tasks to Jira:
+When the plan breakdown has multiple work items and the user wants to track them in Jira:
 
-1. **Validate hierarchy** — tasks go under a story, not an epic
-2. For each task group in the plan, present the suggested Jira tasks:
+1. **Do NOT create sub-tasks** — suggest **separate Stories under the same Epic** instead
+2. Present the suggested stories:
 
 ```
-Suggested Jira tasks under OSPRH-2345:
+Your plan has 3 groups of work under Epic OSPRH-1000.
+These would be separate Stories under the Epic:
 
-Group 1: API Changes
-  - Task: Add TopologyRef to HeatAPISpec and HeatEngineSpec
-  - Task: Run make manifests generate
-  - Task: Add webhook defaulting for topology fields
+1. Story: Add TopologyRef to GlanceAPI types and webhooks
+   Epic Link: OSPRH-1000
+   fixVersion: 18.0.1
 
-Group 2: Controller Logic
-  - Task: Reconcile topology constraints into pod specs
-  - Task: Add RBAC markers for Topology CR
+2. Story: Reconcile topology constraints in GlanceAPI controller
+   Epic Link: OSPRH-1000
+   fixVersion: 18.0.1
 
-Create these in Jira? (group by group)
+3. Story: Add EnvTest coverage for topology reconciliation
+   Epic Link: OSPRH-1000
+   fixVersion: 18.0.1
+
+Create these Stories in Jira? (I'll provide the fields, you create them)
 ```
 
-3. Do NOT create tasks automatically — present the fields and let the user decide per group
+1. Present the fields and let the user create them manually
+
+## Workflow Status Reference
+
+### Story/Task
+
+`Backlog → To Do → In Progress → Closed`
+
+### Bug
+
+`New → Refinement → Planning → Backlog → In Progress → Review → Verified → Closed`
+
+### Epic
+
+`New → Refinement → Backlog → In Progress → Review → Closed`
+
+### Feature
+
+`New → Refinement → Backlog → In Progress → Release Pending → Closed`
 
 ## Integration with Other Skills
 
-### /feature uses this skill to:
+### /feature uses this skill to
+
 - Read and normalize Jira tickets (input routing)
 - Validate hierarchy before planning
-- Warn if an epic needs a story created first
+- Navigate from Feature → Epic → Story if needed
+- Warn if an Epic needs a Story created first
 
-### /task-executor uses this skill to:
-- Post outcome comments after implementation
-- Suggest task creation from plan breakdown
+### /task-executor uses this skill to
 
-### /jira standalone:
+- Post outcome comments on the Story, never Epic/Feature
+- Suggest separate Stories under the Epic for plan breakdown items
+
+### /jira standalone
+
 - Inspect any ticket: `/jira OSPRH-2345`
-- Check hierarchy: `/jira OSPRH-1000 --hierarchy`
+- Check hierarchy: `/jira OSPRH-1000`

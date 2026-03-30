@@ -63,6 +63,7 @@ make install-project-opencode  # .opencode/skills/ + .opencode/agents/
 | `/feature` | `feature` | Feature/bug planning with Jira, cross-repo analysis, structured strategies |
 | `/code-review` | `code-review` | Code review against openstack-k8s-operators conventions |
 | `/task-executor` | `task-executor` | Execute plans task-by-task with checkpointing and resume |
+| `/jira` | — | Jira integration — ticket inspection, hierarchy validation, outcome posting |
 
 Skills with an agent load an `AGENT.md` file that contains the full domain knowledge and methodology. Skills without an agent are self-contained in their `SKILL.md`.
 
@@ -71,7 +72,7 @@ Skills with an agent load an `AGENT.md` file that contains the full domain knowl
 ### Plan and implement a feature from a Jira ticket
 
 ```bash
-cd ~/go/src/github.com/openstack-k8s-operators/heat-operator
+cd ~/go/src/github.com/openstack-k8s-operators/glance-operator
 
 # Plan from Jira (requires Atlassian MCP)
 /feature OSPRH-4567
@@ -124,10 +125,48 @@ kubectl logs deployment/nova-operator -n openstack > nova.log
 
 ## Workflows
 
+These are the most common development workflows. Each combines multiple skills to cover the full lifecycle.
+
 ### Feature Development
 
 ```
 /feature OSPRH-2345 --> /task-executor --> /test-operator full --> /code-review --> PR
+```
+
+```
++------------------------------------------------------------------------+
+|                                                                        |
+|  PLANNING & EXECUTION          QUALITY & REVIEW                        |
+|                                                                        |
+|  /feature ----------+         /test-operator                           |
+|  [feature agent]    |           quick | standard | full                |
+|       |             |                |                                 |
+|       v             |         /code-style                              |
+|  ~/.local/share/    |           gopls modernize                        |
+|    .../plans/       |                |                                 |
+|       |             |         /code-review                             |
+|       v             |         [code-review agent]                      |
+|  /task-executor     |                                                  |
+|  [task-executor] ---+----> uses during execution                       |
+|       |                                                                |
+|  /jira                       DEBUGGING & ANALYSIS                      |
+|    hierarchy rules                                                     |
+|    outcome posting           /debug-operator                           |
+|    [preloaded into              dev workflow | runtime debug            |
+|     feature and                    |                                   |
+|     task-executor]           /analyze-logs                             |
+|                                 25+ error patterns                     |
+|                                                                        |
+|                              /explain-flow                             |
+|                                 reconciler logic                       |
+|                                                                        |
++------------------------------------------------------------------------+
+|  AGENTS              | EXTERNAL INTEGRATIONS                           |
+|  feature             | [Atlassian MCP] --> /feature, /jira (Jira)      |
+|  task-executor       | [GitHub CLI]    --> /feature (repos)             |
+|  code-review         | [lib-common]    --> plan + execute (reuse)       |
+|                      | [dev-docs]      --> plan + review (conventions)  |
++------------------------------------------------------------------------+
 ```
 
 See [docs/feature.md](docs/feature.md) for detailed flow diagrams.
@@ -144,41 +183,7 @@ See [docs/feature.md](docs/feature.md) for detailed flow diagrams.
 write code --> /test-operator quick --> /test-operator focus "..." --> /code-style --> /code-review --> PR
 ```
 
-### Skill Interaction Map
-
-```
-+------------------------------------------------------------------------+
-|                                                                        |
-|  PLANNING & EXECUTION          QUALITY & REVIEW                        |
-|                                                                        |
-|  /feature ----------+         /test-operator                           |
-|  [feature]          |           quick | standard | full                |
-|       |             |                |                                 |
-|       v             |         /code-style                              |
-|  ~/.local/share/    |           gopls modernize                        |
-|    .../plans/       |                |                                 |
-|       |             |                |                                 |
-|       v             |         /code-review                             |
-|  /task-executor     |         [code-review]                            |
-|  [task-executor] ---+----> uses during execution                       |
-|                                                                        |
-|  DEBUGGING & ANALYSIS          CODE UNDERSTANDING                      |
-|                                                                        |
-|  /debug-operator               /explain-flow                           |
-|    dev workflow                  - reconciler logic                    |
-|    runtime debug                 - state transitions                   |
-|       |                                                                |
-|  /analyze-logs                                                         |
-|    25+ error patterns                                                  |
-|                                                                        |
-+------------------------------------------------------------------------+
-|  AGENTS              | EXTERNAL INTEGRATIONS                           |
-|  feature             | [Atlassian MCP] --> /feature (Jira)             |
-|  task-executor       | [GitHub CLI]    --> /feature (repos)            |
-|  code-review         | [lib-common]    --> plan + execute (reuse)      |
-|                      | [dev-docs]      --> plan + review (conventions) |
-+------------------------------------------------------------------------+
-```
+More workflows documented under [docs/](docs/).
 
 ## Documentation
 
