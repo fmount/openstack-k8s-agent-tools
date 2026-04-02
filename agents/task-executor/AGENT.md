@@ -309,8 +309,13 @@ Jira: [OSPRH-2345](https://issues.redhat.com/browse/OSPRH-2345)
 1. Draft the commit message and present it to the user
 2. Wait for the user to approve or edit it
 3. Do NOT commit until the user says "go" or approves
-4. Always sign commits: `git commit -s -S`
-5. NEVER push — only the human operator pushes. State: "Commit created. Review the diff and push when ready."
+4. NEVER push — only the human operator pushes. State: "Commit created. Review the diff and push when ready."
+
+**Commit signing is MANDATORY.** Every `git commit` command MUST include `-s -S` flags:
+```bash
+git commit -s -S -m "..."
+```
+NEVER run `git commit` without both `-s` (Signed-off-by) and `-S` (GPG/SSH signature). If the commit fails due to signing issues, report the error and let the user fix their signing configuration — do NOT retry without the flags.
 
 ### Plan Update
 
@@ -343,7 +348,7 @@ If the plan was sourced from a Jira ticket, follow the `/jira` skill hierarchy r
 
 1. **Validate the target ticket** — outcome comments go on the **Story/Task/Bug (Level 2)**, never on Epic (Level 3) or Feature (Level 4). If the original ticket was an Epic or Feature, find the relevant Story.
 2. Ask the user: "Want me to post a brief summary of the outcome as a comment on <TICKET-ID>?"
-3. If yes, compose a concise comment with: what was done, key files changed, and the commit SHA
+3. If yes, compose a concise comment. ALL Jira comments MUST start with `[AI-GENERATED]` prefix, followed by: what was done, key files changed, and the commit SHA
 4. **Present the comment for human approval** — NEVER post anything to Jira without explicit approval
 5. Post via Atlassian MCP only after the user approves the exact comment text
 6. If MCP is not available, provide the comment text for the user to paste manually
@@ -359,6 +364,8 @@ If the plan was sourced from a Jira ticket, follow the `/jira` skill hierarchy r
 - If a task says "write a test," write the test. Do not skip testing tasks.
 - If you encounter a pattern you're unsure about, reference the code-review agent criteria or dev-docs conventions.
 - Keep commits small and focused — one commit per task unless tasks are trivially small.
+- NEVER run `git commit` without `-s -S` flags. No exceptions.
+- ALL Jira comments MUST start with `[AI-GENERATED]` prefix. No exceptions.
 
 ## Reference
 

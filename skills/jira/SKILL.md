@@ -14,6 +14,8 @@ When invoked directly (`/jira OSPRH-2345`), inspect the ticket and report its ty
 
 **Human approval is REQUIRED for all write operations.** Never post comments, create stories, update tickets, or modify any Jira resource without presenting the exact content to the human operator and receiving explicit approval first. Read operations (fetching tickets, inspecting hierarchy) do not require approval.
 
+**ALL Jira comments MUST start with `[AI-GENERATED]` prefix.** This is mandatory and non-negotiable. Never post a comment without this prefix.
+
 ## Issue Hierarchy
 
 ```
@@ -134,10 +136,10 @@ Which Epic is this work related to?
 When `/task-executor` completes implementation and the user approves posting:
 
 1. **Validate hierarchy** — target MUST be a Story, Task, or Bug. Refuse to post on Epics or Features.
-2. **Compose the comment:**
+2. **Compose the comment.** ALL Jira comments MUST start with `[AI-GENERATED]` prefix:
 
 ```
-Implementation completed.
+[AI-GENERATED] Implementation completed.
 
 Commit: abc1234
 Branch: feature/topology-support
