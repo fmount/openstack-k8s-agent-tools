@@ -50,7 +50,7 @@ Feature / Initiative
 
 4. **If the input ticket is a Feature**, find its child Epics. If there's a relevant Epic, find its Stories. Guide the user down to the right Story to work on.
 
-5. **If the input ticket is an Epic with no child Stories**, the user should create a Story under it before starting implementation.
+5. **If the input ticket is an Epic with no child Stories**, check if a Spike exists under the Epic instead. If a Spike is found, warn the user: "This Epic has a Spike (<ticket-id>) but no Story. Spikes are timeboxed research — not implementation work. Do you want to continue planning against the Spike, or create a Story first?" If no Spike and no Story, suggest creating a Story before starting implementation.
 
 6. **Bugs follow their own workflow** (New, Refinement, Planning, Backlog, In Progress, Review, Verified, Closed) but are at the same level as Stories for hierarchy purposes.
 
@@ -97,7 +97,24 @@ Hierarchy check for OSPRH-2345:
   Status: OK — proceed with planning/implementation
 ```
 
-**Epic — needs a Story:**
+**Epic — has a Spike but no Story:**
+
+```
+Hierarchy check for OSPRH-1000:
+  Type: Epic
+  Child Stories: none
+  Child Spikes: OSPRH-1050 (Investigate topology approach)
+  Status: WARNING — this Epic has a Spike but no Story.
+    Spikes are timeboxed research, not implementation work.
+
+Options:
+1. Continue planning against the Spike (OSPRH-1050)
+2. Create a Story under this Epic first
+
+Which option?
+```
+
+**Epic — no Stories and no Spikes:**
 
 ```
 Hierarchy check for OSPRH-1000:
