@@ -47,7 +47,7 @@ make install-project-opencode  # .opencode/skills/ + .opencode/agents/
 | Go toolchain | Yes | Operator development, tests, linting |
 | make | Yes | Build system (make test, make manifests, etc.) |
 | gh (GitHub CLI) | Optional | Cross-repo analysis in `/feature` when local checkouts aren't available |
-| Atlassian MCP | Optional | Jira ticket reading in `/feature` — configure in Claude Code settings |
+| Atlassian MCP | Optional | Jira integration for `/feature` and `/jira` - see [MCP Setup](docs/mcp-setup.md) |
 | golangci-lint | Optional | Enhanced linting in `/test-operator` |
 | gosec, govulncheck | Optional | Security scanning in `/test-operator security` |
 
@@ -197,6 +197,7 @@ More workflows documented under [docs/](docs/).
 
 - **[Getting Started](docs/GETTING-STARTED.md)** — quick reference for all skills
 - **[Feature Planning Guide](docs/feature.md)** — detailed walkthrough with use case
+- **[MCP Setup](docs/mcp-setup.md)** — Atlassian MCP configuration for Jira integration
 - **[Development Guide](docs/DEVELOPMENT.md)** — extending the plugin with new skills
 - **[CLAUDE.md](CLAUDE.md)** — project conventions and skill reference
 
