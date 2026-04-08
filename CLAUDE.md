@@ -24,6 +24,7 @@ openstack-k8s-agent-tools/
 │   ├── code-style/          # Go code style enforcement
 │   ├── test-operator/       # Testing and quality assurance
 │   ├── code-review/         # Code review agent (skill entry point)
+│   ├── backport-review/     # Downstream vs upstream patch comparison
 │   └── task-executor/       # Plan execution with checkpointing
 ├── agents/                  # Agent definitions
 │   ├── code-review/         # openstack-k8s-operators code reviewer
@@ -112,6 +113,18 @@ Code review agent for openstack-k8s-operators:
 - Testing (EnvTest, TestVector pattern, simulated dependencies)
 - RBAC marker verification
 - Structured review output with severity and verdict
+
+### `/backport-review`
+
+Structured backport review for downstream change requests:
+
+- Validates OSPRH Jira ticket presence in description
+- Validates each commit has `Upstream-<release>: url` in description, or `[downstream-only]` tag with description entry
+- Resolves upstream patches via Gerrit REST API (review.opendev.org)
+- Selects oldest upstream branch by default; accepts an optional branch name or release codename (e.g. `Flamingo`) to compare against a specific branch instead
+- Fetches and compares downstream vs upstream `.patch` files
+- Classifies differences as EXPECTED / NOTABLE / CONCERN
+- Always highlights downstream-only commits in summary
 
 ### `/task-executor`
 
