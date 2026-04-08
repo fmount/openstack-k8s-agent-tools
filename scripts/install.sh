@@ -196,30 +196,6 @@ install_opencode() {
     info "Start OpenCode and your skills should be available."
 }
 
-install_project() {
-    info "Installing to current project..."
-
-    local platform="$1"
-
-    case "$platform" in
-        claude)
-            local skills_dir=".claude/skills"
-            local agents_dir=".claude/agents"
-            install_skills "$skills_dir"
-            install_agents_claude "$agents_dir"
-            info "Installed to .claude/ (project-local, Claude Code)"
-            ;;
-        opencode)
-            local skills_dir=".opencode/skills"
-            local agents_dir=".opencode/agents"
-            install_skills "$skills_dir"
-            convert_skills_opencode "$skills_dir"
-            install_agents_opencode "$agents_dir"
-            info "Installed to .opencode/ (project-local, OpenCode)"
-            ;;
-    esac
-}
-
 uninstall() {
     local platform="$1"
 
@@ -300,8 +276,6 @@ Install openstack-k8s-agent-tools for Claude Code or OpenCode.
 Options:
   --claude-code        Install globally for Claude Code (~/.claude/)
   --opencode           Install globally for OpenCode (~/.config/opencode/)
-  --project-claude     Install to current project (.claude/)
-  --project-opencode   Install to current project (.opencode/)
   --uninstall-claude   Remove from Claude Code
   --uninstall-opencode Remove from OpenCode
   --check              Check dependencies only
@@ -314,7 +288,6 @@ Marketplace install (Claude Code only, recommended):
 Examples:
   $0 --claude-code          # Global install for Claude Code
   $0 --opencode             # Global install for OpenCode
-  $0 --project-claude       # Project-local install for Claude Code
   $0 --check                # Check dependencies
 EOF
 }
@@ -326,8 +299,6 @@ main() {
         case $1 in
             --claude-code)       action="claude";           shift ;;
             --opencode)          action="opencode";         shift ;;
-            --project-claude)    action="project-claude";   shift ;;
-            --project-opencode)  action="project-opencode"; shift ;;
             --uninstall-claude)  action="uninstall-claude"; shift ;;
             --uninstall-opencode) action="uninstall-opencode"; shift ;;
             --check)             action="check";            shift ;;
@@ -346,8 +317,6 @@ main() {
     case "$action" in
         claude)            install_claude_code ;;
         opencode)          install_opencode ;;
-        project-claude)    install_project claude ;;
-        project-opencode)  install_project opencode ;;
         uninstall-claude)  uninstall claude ;;
         uninstall-opencode) uninstall opencode ;;
         check)             check_dependencies ;;

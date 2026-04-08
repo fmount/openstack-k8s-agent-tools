@@ -1,5 +1,5 @@
-.PHONY: install-claude install-opencode install-project-claude install-project-opencode \
-       uninstall-claude uninstall-opencode check test validate help
+.PHONY: install-claude install-opencode uninstall-claude uninstall-opencode \
+       check test validate help
 
 INSTALL := ./scripts/install.sh
 
@@ -10,12 +10,6 @@ install-claude: ## Install globally for Claude Code (~/.claude/)
 
 install-opencode: ## Install globally for OpenCode (~/.config/opencode/)
 	@$(INSTALL) --opencode
-
-install-project-claude: ## Install to current project (.claude/)
-	@$(INSTALL) --project-claude
-
-install-project-opencode: ## Install to current project (.opencode/)
-	@$(INSTALL) --project-opencode
 
 ## Uninstall
 

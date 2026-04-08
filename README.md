@@ -33,13 +33,6 @@ make install-opencode
 make install-claude
 ```
 
-### Project-local install
-
-```bash
-make install-project-claude    # .claude/skills/ + .claude/agents/
-make install-project-opencode  # .opencode/skills/ + .opencode/agents/
-```
-
 ## Dependencies
 
 | Dependency | Required | Purpose |
