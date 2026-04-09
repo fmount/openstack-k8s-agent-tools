@@ -2,7 +2,9 @@
 name: backport-review
 description: Compare downstream backport change requests against upstream OpenStack Gerrit patches. Validates OSPRH ticket presence, Upstream-<release> references per commit, and compares .patch file content.
 user-invocable: true
-allowed-tools: ["WebFetch"]
+allowed-tools:
+  - "WebFetch"
+  - "Bash"
 context: fork
 ---
 
@@ -32,19 +34,60 @@ Perform a structured backport review:
 
 ---
 
-## Step 1 — Fetch Change Request Metadata and Commit Messages
+## Step 1 — Set Up Working Directory and Fetch Change Request Data
 
-Fetch the `.patch` file by appending `.patch` to the change request URL (e.g. `https://example.com/org/repo/-/merge_requests/42.patch`). This returns a multi-patch mbox file with all commits, their full commit messages, and their diffs. Extract from it:
+### 1a. Prepare working directory
 
-- The full commit message for each commit (bounded by `From ` headers).
-- From each commit message:
-  - **`Change-Id:`** line (format: `Change-Id: I<hex>`).
-  - **`Upstream-<release>:`** lines (format: `Upstream-master: https://...` or `Upstream-2025.2: https://...`). Collect all of them; a commit may reference multiple branches.
-  - Any **`OSPRH-NNNNN`** ticket references (may also appear in the change request description).
+Parse the MR number from the URL (e.g. `42` from `.../merge_requests/42`) and set up a clean, MR-scoped working directory:
 
-Also fetch the change request page (`{change_request_url}`) to extract:
-- **OSPRH ticket(s)**: scan description and any visible commit messages for patterns `OSPRH-\d+`.
-- **All `Upstream-<release>: <url>` lines** present anywhere in the description or comments (not in commit messages). These are the upstream references for the whole change request.
+```bash
+MR_ID=42   # parsed from the URL
+WORKDIR=/tmp/backport-review/mr${MR_ID}
+rm -rf "${WORKDIR}"
+mkdir -p "${WORKDIR}"
+```
+
+All files for this review are written under `${WORKDIR}`. Never reuse files from a previous run.
+
+### 1b. Download downstream patch
+
+```bash
+curl -sL "{change_request_url}.patch" -o "${WORKDIR}/downstream.patch"
+```
+
+### 1c. Extract fields from the downstream patch
+
+```bash
+# List commits (From headers) with line numbers
+grep -n "^From " "${WORKDIR}/downstream.patch"
+
+# Extract all Change-Id lines with line numbers
+grep -n "^Change-Id:" "${WORKDIR}/downstream.patch"
+
+# Extract all Upstream-* reference lines from commit messages
+grep -n "^Upstream-" "${WORKDIR}/downstream.patch"
+
+# Extract OSPRH/OSPCIX ticket references from commit messages
+grep -oP '(OSPRH|OSPCIX)-[0-9]+' "${WORKDIR}/downstream.patch" | sort -u
+```
+
+### 1d. Extract upstream refs and OSPRH tickets from the MR description
+
+**Do not use WebFetch for this** — it may summarize and drop refs. Use `curl | grep` instead:
+
+```bash
+# Fetch raw MR page and extract ALL Upstream-* reference lines
+curl -sL "{change_request_url}" \
+  | grep -oP '(?<![a-zA-Z])Upstream-[A-Za-z0-9._-]+:\s*https://[^\s<"&]+' \
+  | sed 's/&amp;/\&/g' \
+  | sort -u > "${WORKDIR}/mr_upstream_refs.txt"
+cat "${WORKDIR}/mr_upstream_refs.txt"
+
+# Extract OSPRH/OSPCIX tickets from the MR page
+curl -sL "{change_request_url}" | grep -oP '(OSPRH|OSPCIX)-[0-9]+' | sort -u
+```
+
+The combined set of `Upstream-*` lines from the `.patch` file and from `${WORKDIR}/mr_upstream_refs.txt` forms the complete upstream refs list. Deduplicate by URL.
 
 Build a per-commit record:
 ```
@@ -65,21 +108,45 @@ upstream_refs:
 
 ## Step 2 — Validate Required Metadata
 
-### 2a. OSPRH ticket check
+### 2a. OSPRH/OSPCIX ticket check
 
-Verify that at least one `OSPRH-NNNNN` pattern appears anywhere in the change request description or commit messages. If absent, mark as **FAIL**.
+Verify that at least one `OSPRH-NNNNN` or `OSPCIX-NNNNN` pattern appears anywhere in the change request description or commit messages. If absent, mark as **FAIL**.
 
 ### 2b. Upstream reference coverage
 
 For **each** commit in the change request, exactly one of the following must be true:
 
-**Option A — Has upstream:** At least one URL from the change request description's `Upstream-<release>:` lines corresponds to an upstream Gerrit patch with the **same Change-Id** as that commit. To establish this mapping: when querying Gerrit in Step 3 (which retrieves all branches for each Change-Id), cross-reference the resulting change numbers against the Gerrit numbers parsed from the description's `Upstream-<release>:` URLs.
+**Option A — Has upstream:** At least one URL from the complete upstream refs list corresponds to an upstream Gerrit patch with the **same Change-Id** as that commit.
+
+To build the per-commit mapping:
+1. For every URL in the complete upstream refs list, parse its Gerrit change number.
+2. From the Gerrit API results in Step 3, look up that change number and read its `change_id` field.
+3. If that `change_id` matches a downstream commit's `Change-Id`, associate that ref with that commit.
+4. A single commit may have **multiple** matching refs (e.g. one for master, one per stable branch). Collect **every** matched ref — do not stop at the first match.
+5. Any upstream ref whose Gerrit change number is not found in any commit's Gerrit results is an **unmatched ref** — list it separately in the report as `Unmatched upstream ref: <label>: <url>` so reviewers can investigate.
+
+Record **all** matched refs per commit — they will all appear in the Commit Summary table.
 
 **Option B — Downstream-only:** The commit subject contains the tag `[downstream-only]` (case-insensitive) **and** the change request description explicitly states that the commit is downstream-only (e.g. a sentence or list item explaining why there is no upstream equivalent).
 
 If neither condition is met for a commit, mark it as **FAIL**:
 - No upstream ref and no `[downstream-only]` tag → `FAIL (missing upstream ref — add Upstream-<release>: url or mark [downstream-only])`
 - Has `[downstream-only]` tag but change request description does not acknowledge it → `FAIL (downstream-only tag in commit but not documented in change request description)`
+
+### 2c. Upstream reference label validation
+
+For **each** `Upstream-<release>: <url>` line (across all commits), validate that the `<release>` label matches the actual branch of the Gerrit change at `<url>`:
+
+1. Parse the Gerrit change number from the URL.
+2. From the Gerrit API results in Step 3, look up that change number and read its `branch` field.
+3. Resolve the `<release>` label to an expected branch:
+   - If the label is a codename (e.g. `Flamingo`, `Gazpacho`), resolve it via `series_status.yaml` to `stable/<release-id>` or `unmaintained/<release-id>`.
+   - If the label is already a branch path or `master`, use it directly.
+4. Compare the resolved expected branch against the actual `branch` field:
+   - **Match** → OK, no warning needed.
+   - **Mismatch** → record a **non-critical warning**: `Upstream-<release>: <url> — label implies <expected_branch> but Gerrit change is on <actual_branch>`.
+
+These mismatches are non-blocking (the upstream ref still counts as valid for coverage purposes) but must appear in the report under **Issues Requiring Attention** classified as **NOTABLE**.
 
 ---
 
@@ -91,7 +158,7 @@ For each commit with a `Change-Id`, query the Gerrit REST API to find all upstre
 GET https://review.opendev.org/changes/?q=change:{CHANGE_ID}&o=CURRENT_REVISION&o=CURRENT_COMMIT
 ```
 
-(Strip the `)]}'\n` XSSI prefix from the JSON response before parsing.)
+Use WebFetch for this (the JSON response is small and does not risk summarization). Strip the `)]}'\n` XSSI prefix from the JSON response before parsing.
 
 This returns a list of change objects, each with:
 - `id` (numeric change number)
@@ -122,25 +189,61 @@ Record the selected upstream change's numeric ID for patch fetching. When using 
 
 ### 4a. Fetch upstream patch
 
-For the selected Gerrit change (numeric ID), fetch the patch:
+For the selected Gerrit change (numeric ID), download and decode the patch into `${WORKDIR}`:
 
+```bash
+curl -sL "https://review.opendev.org/changes/{numeric_id}/revisions/current/patch" \
+  | base64 -d > "${WORKDIR}/upstream_{numeric_id}.patch"
 ```
-GET https://review.opendev.org/changes/{numeric_id}/revisions/current/patch
+
+### 4b. Extract the downstream commit's patch section
+
+The full downstream patch is in `${WORKDIR}/downstream.patch`. Extract each commit's section by line range:
+
+```bash
+# Find From-header line numbers to determine ranges
+grep -n "^From " "${WORKDIR}/downstream.patch"
+# e.g. commit 1: lines 1-119, commit 2: lines 120-end
+sed -n '1,119p'   "${WORKDIR}/downstream.patch" > "${WORKDIR}/downstream_commit1.patch"
+sed -n '120,999999p' "${WORKDIR}/downstream.patch" > "${WORKDIR}/downstream_commit2.patch"
 ```
 
-The response body is a **base64-encoded** mbox patch. Decode it to obtain the raw git patch text.
+### 4c. Compare using shell tools
 
-### 4b. Fetch downstream patch
+```bash
+# Per-file added/removed line counts for downstream commit N
+awk '
+  /^diff --git/{ if(file) printf "%s +%d -%d\n", file, add, del; file=""; add=0; del=0 }
+  /^\+\+\+ b\//{ file=substr($0,7) }
+  /^\+[^\+]/{ add++ }
+  /^-[^-]/{ del++ }
+  END{ if(file) printf "%s +%d -%d\n", file, add, del }
+' "${WORKDIR}/downstream_commitN.patch"
 
-The downstream commit's patch is already available from the `.patch` file fetched in Step 1. Extract the relevant `From …` section for this commit.
+# Per-file added/removed line counts for upstream patch
+awk '
+  /^diff --git/{ if(file) printf "%s +%d -%d\n", file, add, del; file=""; add=0; del=0 }
+  /^\+\+\+ b\//{ file=substr($0,7) }
+  /^\+[^\+]/{ add++ }
+  /^-[^-]/{ del++ }
+  END{ if(file) printf "%s +%d -%d\n", file, add, del }
+' "${WORKDIR}/upstream_{numeric_id}.patch"
 
-### 4c. Compare
+# Check if a specific identifier exists in each patch
+grep -c "def test_some_method" "${WORKDIR}/downstream_commitN.patch"
+grep -c "def test_some_method" "${WORKDIR}/upstream_{numeric_id}.patch"
 
-Compare the two patches focusing on:
-- **File paths changed**: same files in both? Any extra or missing files in the downstream patch?
-- **Added/removed lines** (`+`/`-` in the diff hunks): are the functional changes identical? Note any lines present in one but not the other.
-- **Commit message differences**: differences in description, tags, or trailers (expected differences: cherry-pick lines, `Signed-off-by`, `Assisted-By` etc. are normal; flag unexpected functional differences).
-- **Context lines** (`@@ ... @@` hunk headers): check if offsets differ significantly, which may indicate the downstream was applied to a different code base version.
+# List all added function/method definitions in each patch
+grep "^+.*def " "${WORKDIR}/downstream_commitN.patch"
+grep "^+.*def " "${WORKDIR}/upstream_{numeric_id}.patch"
+
+# Direct diff of the two patches (ignoring expected metadata lines)
+diff \
+  <(grep "^[+-]" "${WORKDIR}/downstream_commitN.patch" | grep -v "^[+-][+-][+-]") \
+  <(grep "^[+-]" "${WORKDIR}/upstream_{numeric_id}.patch" | grep -v "^[+-][+-][+-]")
+```
+
+Use the per-file line counts from the awk commands to populate the **Files changed** table. For any identifier that appears to differ between the two patches, **always verify with an explicit grep** before reporting it as a difference.
 
 Classify each difference as:
 - **EXPECTED**: cherry-pick markers, authorship, date, `Signed-off-by`, `Assisted-By`, trivial rebase offsets in hunk headers.
@@ -158,7 +261,7 @@ Output a structured Markdown report. Keep it concise; use tables and short bulle
 
 **Change Request:** {url}
 **Target branch:** {branch}
-**OSPRH Ticket(s):** {OSPRH-NNNNN, ...} — PASS / FAIL (none found)
+**Ticket(s):** {OSPRH-NNNNN / OSPCIX-NNNNN, ...} — PASS / FAIL (none found)
 
 ---
 
@@ -166,8 +269,10 @@ Output a structured Markdown report. Keep it concise; use tables and short bulle
 
 | # | Subject | Change-Id | Upstream Refs | Upstream Ref Check |
 |---|---------|-----------|---------------|--------------------|
-| 1 | ... | I... | Upstream-2025.2: url | PASS / FAIL |
+| 1 | ... | I... | Upstream-Flamingo: url<br>Upstream-Gazpacho: url | PASS / FAIL |
 | 2 | ... | I... | (none) | FAIL — missing |
+
+List **all** `Upstream-<release>:` lines that correspond to each commit (matched by Change-Id). If a ref's label does not match the actual Gerrit branch, append ⚠️ to that ref line (e.g. `Upstream-Gazpacho: url ⚠️ (change is on master)`).
 
 ---
 
@@ -183,8 +288,8 @@ Output a structured Markdown report. Keep it concise; use tables and short bulle
 #### Files changed
 | File | Downstream | Upstream | Match? |
 |------|-----------|----------|--------|
-| watcher/common/cinder_helper.py | +58 / -16 | +58 / -16 | YES |
-| watcher/tests/... | +140 / -16 | +140 / -16 | YES |
+| watcher/common/cinder_helper.py | (+58 / -16) | (+58 / -16) | YES |
+| watcher/tests/... | (+140 / -16) | (+140 / -16) | YES |
 
 #### Differences
 - EXPECTED: cherry-pick trailer, date, author
@@ -207,7 +312,7 @@ Output a structured Markdown report. Keep it concise; use tables and short bulle
 (List any commits marked [downstream-only], even if correctly documented. Always highlight these so reviewers are aware of divergence from upstream.)
 
 ### Issues Requiring Attention
-(List any NOTABLE or CONCERN items, or "None found — backport looks clean.")
+(List all NOTABLE and CONCERN items here, including upstream reference label mismatches from Step 2c. Use **NOTABLE** for label mismatches, missing suggested refs, and unmatched refs; use **CONCERN** for functional logic differences. Write "None found — backport looks clean." if there are no items.)
 ```
 
 ---
@@ -215,11 +320,15 @@ Output a structured Markdown report. Keep it concise; use tables and short bulle
 ## Operating Principles
 
 - **Never guess URLs.** Only use URLs provided by the user or retrieved from fetched content.
-- **Decode base64 Gerrit patches** before comparing; do not compare encoded content.
+- **Use curl + shell tools for all .patch file operations.** Never use WebFetch to fetch or analyze `.patch` files — WebFetch summarizes large content and will silently drop methods, functions, or diff hunks. Use `curl` to download patch files and `grep`/`diff`/`sed` for all analysis.
+- **Use WebFetch only for small JSON API responses** (Gerrit REST API queries). These are not at risk of losing detail.
+- **Never use WebFetch to extract `Upstream-*` refs or OSPRH tickets from the MR page.** Use `curl | grep` instead — WebFetch summarizes HTML pages and will silently drop upstream reference lines.
+- **Verify with grep before reporting any difference.** Before classifying a method, function, or identifier as missing from either patch, run an explicit `grep` against the downloaded file. Only report it as absent if `grep` returns no match.
+- **Decode base64 Gerrit patches** with `base64 -d` before comparing; do not compare encoded content.
 - **Strip XSSI prefix** (`)]}'`) from all Gerrit REST API JSON responses before parsing.
 - If a Gerrit query returns no results for a Change-Id, report it as **"upstream not found"** and continue with remaining commits.
-- If WebFetch cannot retrieve a page (authentication, JS-only), report the failure clearly and ask the user to provide the patch content manually.
+- If `curl` cannot retrieve a page (authentication required), report the failure clearly and ask the user to provide the patch content manually.
 - Keep diff comparisons focused on **functional changes**; do not flag expected metadata differences as issues.
 - If the oldest upstream branch differs from what is listed in the `Upstream-<release>` lines, note the discrepancy but do not fail — it may just mean the reference points to an intermediate backport.
-- **Do not report `@@ ... @@` hunk context strings (class/function names in diff headers) as differences.** The WebFetch AI that decodes base64 patches may hallucinate or distort those context labels. Only report differences found in actual `+`/`-` lines.
-- **Do not report class names, base classes, or inheritance differences unless they appear explicitly in `+`/`-` lines of the patch.** Class definitions visible only in diff context (unchanged lines) must not be treated as changes, and must not be attributed to one side if not confirmed in the actual diff output. Hallucinating class names is a known failure mode — when in doubt, omit rather than guess.
+- **Do not report `@@ ... @@` hunk context strings as differences.** Only report differences found in actual `+`/`-` lines.
+- **Do not report class names, base classes, or inheritance differences unless they appear explicitly in `+`/`-` lines of the patch.**
