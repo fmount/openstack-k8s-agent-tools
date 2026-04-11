@@ -192,13 +192,14 @@ More workflows documented under [docs/](docs/).
 - **[Feature Planning Guide](docs/feature.md)** — detailed walkthrough with use case
 - **[MCP Setup](docs/mcp-setup.md)** — Atlassian MCP configuration for Jira integration
 - **[Development Guide](docs/DEVELOPMENT.md)** — extending the plugin with new skills
+- **[Memory and State](docs/memory-docs.md)** — shared memory, state tracking, worktrees, dependencies
 - **[CLAUDE.md](CLAUDE.md)** — project conventions and skill reference
 
 ## Roadmap
 
 - [x] `install.sh` — manual installation script with platform support (Claude Code, OpenCode)
 - [ ] Improve code review to take a PR number
-- [ ] Session management for `/feature` and `/task-executor`
+- [x] Shared memory (MEMORY.md), state tracking (state.json), worktree isolation, dependency resolution
 - [ ] Jira sub-task export from task breakdowns
 - [ ] Plan diffing (detect Jira ticket changes after plan creation)
 - [ ] Improve docs/ with a section about TOKENS
