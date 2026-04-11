@@ -191,14 +191,69 @@ Each instance reads state.json to see what others are doing. No file conflicts s
 ### Sequential Execution
 
 - Pick the next pending task (first `- [ ]` in the plan).
-- Verify all dependencies are completed (check that tasks listed in "Depends on" are `- [x]`).
-- If a dependency is not met, report it and stop.
+- Verify all dependencies are resolved before starting (see Dependency Resolution below).
+- If a dependency is not met, offer options: skip to next unblocked task, override, or wait.
+
+### Dependency Resolution
+
+Each task may declare dependencies in the plan file:
+
+```
+- [ ] **Task 2.1: Implement reconciliation**
+  - **Depends on:** Task 1.1, Task 1.2
+  - **External dep:** lib-common PR #789
+```
+
+Three types of dependencies:
+
+**Intra-plan** (same plan file):
+- Check: is the referenced task marked `[x]` in the plan file?
+- If not done: blocked
+
+**Cross-plan** (another plan in the same operator):
+- Format in plan: `Depends on: OSPRH-6789/Task 1.1`
+- Check: read the other plan file from `~/.openstack-k8s-agents-plans/<operator>/`
+- Also check state.json `completed` array for the other plan
+
+**External** (a PR in another repo):
+- Format in plan: `External dep: lib-common PR #789`
+- Check: `gh pr view 789 --repo openstack-k8s-operators/lib-common --json state`
+- If state is `MERGED`: resolved
+- If state is `OPEN` or `CLOSED`: blocked
+
+**When blocked:**
+
+```
+Pre-task check for Task 2.1:
+  Depends on: Task 1.1 (this plan) — completed
+  Depends on: Task 1.2 (this plan) — in progress [BLOCKED]
+
+Task 2.1 is blocked. Options:
+1. Skip to the next unblocked task
+2. Proceed anyway (override — you accept the risk)
+3. Stop and wait
+
+Which option?
+```
+
+For external dependencies:
+
+```
+External dependency check for Task 3.1:
+  External dep: lib-common PR #789 — OPEN (not merged)
+
+Task 3.1 is blocked on an external dependency.
+Options:
+1. Skip to the next unblocked task
+2. Proceed with a replace directive (temporary workaround)
+3. Stop and wait
+```
 
 ### Pre-Task Validation
 
 Before starting each task:
 
-1. Verify dependent tasks are done.
+1. Resolve all dependencies (intra-plan, cross-plan, external).
 2. Check that referenced files exist (or will be created by this task).
 3. If the codebase has changed since the plan was created (files moved, deleted, or heavily modified), report the drift and ask: "The codebase has changed. Should I adapt this task or regenerate the plan?"
 
