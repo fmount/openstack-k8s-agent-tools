@@ -90,6 +90,7 @@ make install-claude
 | `/task-executor` | `task-executor` | Execute plans task-by-task with checkpointing and resume |
 | `/backport-review` | — | Compare downstream backport change requests against upstream Gerrit patches |
 | `/jira` | — | Jira integration — ticket inspection, hierarchy validation, outcome posting |
+| `/generate-containerfile` | — | Generate Containerfiles for OpenStack service images from tcib/kolla/rdo analysis |
 
 Skills with an agent load an `AGENT.md` file that contains the full domain knowledge and methodology. Skills without an agent are self-contained in their `SKILL.md`.
 
