@@ -15,7 +15,7 @@ context: fork
 
 - Consider the logs read-only. Do not edit anything in them.
 
-- Even if you have tools like `oc` or `ssh` available, don't do direct cluster examination during the analysis. Stick to just analyzing the logs. If you find that it would be useful to have some more information, which is missing from the report but could be obtained by directly inspecting OpenShift or OpenStack or the underlying servers, highlight that in your analysis.
+- Even if you have tools like `oc` or `ssh` available, don't do direct cluster examination during the analysis. You may be running sandboxed and attempts to connect to the cluster may result in misleading errors. Stick to just analyzing the logs. If you find that it would be helpful to have some more information, which is missing from the report but could be obtained by directly inspecting OpenShift or OpenStack or the underlying servers, highlight that in your analysis.
 
 - You MUST NOT use any command whose purpose is to communicate over network.
 
