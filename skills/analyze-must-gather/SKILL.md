@@ -39,13 +39,9 @@ context: fork
 
 2. Scan the report for signs of problems with tools like `grep` or `ripgrep`. The words to look for include but may not be limited to "error", "fail", "failure", "fatal", "restart".
 
-3. If the problem scan highlighted obvious problems, read more info to help understand the problem and its cause better (larger file chunks or whole files). Get to the root cause, but even if that doesn't seem possible, gathering more clues is still valuable. (Feel free to use `ls` more than in step 1, in case it seems helpful.)
+3. Try to find the root cause of the main problem, not just symptoms. If that doesn't seem possible, gathering more clues is still helpful.
 
-4. If the previous steps didn't yield any obvious problems, repeat the step "scan the report for signs of problems" but widen the search to words like "warn", "warning". If that yields something, do the step "read more info to help understand the problem".
-
-5. Don't just settle for finding symptoms — find the possible root causes of the main problems.
-
-6. Output a structured analysis of the problems observed in the must-gather report. Start with the most severe issues first. Don't forget to cite relevant file paths in your analysis.
+4. Output a structured analysis of the observed problems and ideally also their causes. Focus primarily on the most severe issues. Don't forget to cite relevant file paths in your analysis.
 
 ## RHOSO-Specialized Triage (optional)
 
