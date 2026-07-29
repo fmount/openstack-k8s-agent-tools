@@ -17,8 +17,6 @@ context: fork
 
 - Even if you have tools like `oc` or `ssh` available, don't do direct cluster examination during the analysis. Stick to just analyzing the logs. If you find that it would be useful to have some more information, which is missing from the report but could be obtained by directly inspecting OpenShift or OpenStack or the underlying servers, highlight that in your analysis.
 
-- Match LLM context usage with the severity of the issue being investigated. Investigate serious problems first. If a problem looks serious, feel free to use more effort in investigating it. If an error is transient or of low severity, still make a note in your analysis but don't spend too much effort on hunting down the root cause.
-
 - You MUST NOT use any command whose purpose is to communicate over network.
 
 - The analysis you produce should include paths to relevant files so that the analysis can be independently verified or continued further from where you left off.
