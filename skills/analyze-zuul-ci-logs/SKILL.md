@@ -19,6 +19,8 @@ context: fork
 
 - You MUST NOT use any command whose purpose is to communicate over network.
 
+- If you have a TODO-like tool available, use it to keep track of steps to do.
+
 - The analysis you produce should include paths to relevant files so that the analysis can be independently verified or continued further from where you left off.
 
 ## Zuul CI logs structure hints
