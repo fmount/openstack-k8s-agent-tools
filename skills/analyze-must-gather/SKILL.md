@@ -31,6 +31,8 @@ context: fork
 
 - There may be "sos reports" (logs and troubleshooting command outputs) from OpenStack data plane nodes (e.g. compute nodes) and OCP nodes under `sos-reports/_all_nodes` directory. You may need to extract them from .tar.xz files. The compute node sos reports tend to be useful when investigating problems affecting OpenStack virtual machines and services on the data plane.
 
+- There can be short transient error states -- this is often ok and expected for convergence-oriented deployment/update processes where many things happen in parallel. If an error happens for a short while and then stops happening (service recovers and progresses further) then it's quite likely it's not a symptom of a problem.
+
 ## Analysis workflow
 
 1. Locate the must-gather report. If it's tarballed, extract it. Do not do too many `ls` calls to understand the structure of the report yet, it is big with many subdirectories.
