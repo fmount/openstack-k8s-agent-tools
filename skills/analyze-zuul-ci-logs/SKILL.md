@@ -33,6 +33,8 @@ context: fork
 
 - Often the nested log which is printed on a single line inside `job-output.txt` can be found properly line-delimited in some other place in the logs directory.
 
+- Pay attention to the time in the logs. When you spot the main problem that the job perhaps failed on, it is often useful to cross-reference what was happening at the same time in relevant services and operators.
+
 ## Analysis workflow
 
 1. Locate `job-output.txt` or `job-output.txt.gz` inside the logs directory and see if there is an error somewere towards the end of that log file. This can give you a good clue for further investigation.
