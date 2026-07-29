@@ -29,6 +29,10 @@ context: fork
 
 - There should be an `openstack-must-gather` directory which should contain various logs from the environment (e.g. from OpenShift pods). Look at the `analyze-must-gather` skill for hints on how to analyze a must-gather report.
 
+- `job-output.txt` can contain very long lines. Using `grep` and `rg` the usual way on the file can often exceed output limits for the agentic tooling, and end up being useless. Instead of normal line-based grepping for failures, use a pattern like `grep -ioE '.{0,100}fatal.{0,500}'` pattern to search for 'fatal' (adjust for other words) with 100 characters of context before and 500 after.
+
+- Often the nested log which is printed on a single line inside `job-output.txt` can be found properly line-delimited in some other place in the logs directory.
+
 ## Analysis workflow
 
 1. Locate `job-output.txt` or `job-output.txt.gz` inside the logs directory and see if there is an error somewere towards the end of that log file. This can give you a good clue for further investigation.
