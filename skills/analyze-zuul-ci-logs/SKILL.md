@@ -37,6 +37,8 @@ context: fork
 
 - Feel free to spawn a subagent to answer a particular question if it seems helpful. Be sure to pass along all important rules and hints to the subagent, and give it a reasonable token budget (e.g. 200 K tokens).
 
+- There can be short transient error states -- this is often ok and expected for convergence-oriented deployment/update processes where many things happen in parallel. If an error happens for a short while and then stops happening (service recovers and progresses further) then it's quite likely it's not a symptom of a problem.
+
 ## Analysis workflow
 
 1. Locate `job-output.txt` or `job-output.txt.gz` inside the logs directory and see if there is an error somewere towards the end of that log file. This can give you a good clue for further investigation.
