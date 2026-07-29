@@ -35,6 +35,8 @@ context: fork
 
 - Pay attention to the time in the logs. When you spot the main problem that the job perhaps failed on, it is often useful to cross-reference what was happening at the same time in relevant services and operators.
 
+- Feel free to spawn a subagent to answer a particular question if it seems helpful. Be sure to pass along all important rules and hints to the subagent, and give it a reasonable token budget (e.g. 200 K tokens).
+
 ## Analysis workflow
 
 1. Locate `job-output.txt` or `job-output.txt.gz` inside the logs directory and see if there is an error somewere towards the end of that log file. This can give you a good clue for further investigation.
