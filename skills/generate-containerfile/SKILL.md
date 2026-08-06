@@ -332,6 +332,11 @@ COPY ${CONSTRAINTS_FILE} /deps-upper-constraints.txt
 COPY src/ /src/
 COPY <image>/src/ /src/
 
+# Optional: force pip to build all packages from source instead of using
+# pre-built wheels.  Passed via --build-arg PIP_NO_BINARY=:all: from build.sh.
+ARG PIP_NO_BINARY=""
+ENV PIP_NO_BINARY=${PIP_NO_BINARY}
+
 COPY <image>/builddeps.txt /tmp/builddeps.txt
 RUN pkgs=$(cat /tmp/builddeps.txt | grep -v '^#' | grep -v '^$' | tr '\n' ' ') && \
     if [ -n "${pkgs}" ]; then microdnf -y install ${pkgs} && microdnf clean all; fi
@@ -350,20 +355,25 @@ RUN cp /deps-upper-constraints.txt /tmp/build-constraints.txt && \
       fi; \
     done
 
-# Build wheels from all source packages and overrides
+# Build wheels from source packages (project repos and overrides)
 RUN for pkg in /src/*/ /src/overrides/*/; do \
       if [ -d "${pkg}" ] && [ -f "${pkg}/setup.cfg" -o -f "${pkg}/setup.py" -o -f "${pkg}/pyproject.toml" ]; then \
-        pip3 wheel --no-cache-dir --no-build-isolation --no-deps \
-          --wheel-dir=/wheels "${pkg}"; \
+        pip3 wheel --no-cache-dir --no-deps \
+          --wheel-dir=/wheels/pkgs "${pkg}"; \
       fi; \
     done
+
+# Build wheels for all dependencies (from the constraints/lockfile)
+RUN pip3 wheel --no-cache-dir --no-deps \
+      --find-links=/wheels/pkgs \
+      --wheel-dir=/wheels/deps -r /deps-upper-constraints.txt
 
 # Generate build manifest: package-name,commit-hash,version
 RUN for src_dir in /src/*/ /src/overrides/*/; do \
       if [ -d "${src_dir}" ] && [ -f "${src_dir}/setup.cfg" ]; then \
         pkg_name=$(grep -m1 '^name' "${src_dir}/setup.cfg" | sed 's/.*=\s*//'); \
         commit=$(git -C "${src_dir}" rev-parse HEAD 2>/dev/null || echo "unknown"); \
-        version=$(ls /wheels/${pkg_name//-/_}-*.whl 2>/dev/null | head -1 | sed 's/.*-\([0-9][^-]*\)-.*/\1/' || echo "unknown"); \
+        version=$(ls /wheels/pkgs/${pkg_name//-/_}-*.whl 2>/dev/null | head -1 | sed 's/.*-\([0-9][^-]*\)-.*/\1/' || echo "unknown"); \
         echo "${pkg_name},${commit},${version}"; \
       fi; \
     done > /source-built-packages.txt
@@ -371,7 +381,9 @@ RUN for src_dir in /src/*/ /src/overrides/*/; do \
 # Install wheels temporarily so entry points are available for config generation
 RUN pip3 install --no-cache-dir --prefix=/usr \
       -c /tmp/build-constraints.txt \
-      /wheels/*.whl
+      --find-links=/wheels/deps \
+      --find-links=/wheels/pkgs \
+      /wheels/pkgs/*.whl
 
 # Generate default config and collect upstream config files
 RUN mkdir -p /configfiles/etc/<project> && \
@@ -397,7 +409,7 @@ COPY <image>/bindeps.txt /tmp/bindeps.txt
 RUN pkgs=$(cat /tmp/bindeps.txt | grep -v '^#' | grep -v '^$' | tr '\n' ' ') && \
     if [ -n "${pkgs}" ]; then microdnf -y install ${pkgs} && microdnf clean all; fi && rm /tmp/bindeps.txt
 
-# Install source-built wheels + deps from PyPI + extra Python deps
+# Install source-built wheels + deps + extra Python deps
 COPY --from=build /wheels /wheels
 COPY --from=build /tmp/build-constraints.txt /deps-upper-constraints.txt
 COPY --from=build /source-built-packages.txt /source-built-packages.txt
@@ -405,7 +417,9 @@ COPY <image>/pythondeps.txt /tmp/pythondeps.txt
 RUN extrapkgs=$(cat /tmp/pythondeps.txt | grep -v '^#' | grep -v '^$' | tr '\n' ' ') && \
     pip3 install --no-cache-dir --prefix=/usr \
       -c /deps-upper-constraints.txt \
-      /wheels/*.whl ${extrapkgs} && \
+      --find-links=/wheels/deps \
+      --find-links=/wheels/pkgs \
+      /wheels/pkgs/*.whl ${extrapkgs} && \
     rm -rf /wheels /tmp/pythondeps.txt
 
 # Create required directories
@@ -436,6 +450,17 @@ RUN sed -i -r 's,^(Listen 80),#\1,' /etc/httpd/conf/httpd.conf && \
     usermod --append --groups apache <user>
 ```
 
+If the service uses packages with Rust-based build systems (e.g., `rpds-py`,
+`bcrypt`) and `PIP_NO_BINARY=:all:` is used, add these to the build stage
+after the `PIP_NO_BINARY` lines:
+
+```dockerfile
+# Required to build Rust-based Python packages from source
+ENV MATURIN_NO_INSTALL_RUST=true
+```
+
+And add `rust` and `cargo` to `builddeps.txt`.
+
 ### builddeps.txt
 
 Build-time system packages for the build stage. These are needed to compile
@@ -448,42 +473,59 @@ gcc
 gcc-c++
 python3-devel
 python3-setuptools
-python3-wheel
 libffi-devel
 openssl-devel
 ```
 
 If the service has Python dependencies with unusual C library requirements
-(e.g., `libxml2-devel` for lxml), add them here.
+(e.g., `libxml2-devel` for lxml, `libxslt-devel` for lxml XSLT support),
+add them here.
+
+If the service needs to support `PIP_NO_BINARY=:all:` (building all packages
+from source), also add `rust` and `cargo` for Rust-based packages (rpds-py,
+bcrypt, cryptography).
+
+Some Python packages that have C extensions may need to be installed as RPMs
+in the build stage (e.g., `python3-cryptography`) to satisfy build-time
+linking requirements. List these here as well.
 
 ### pythonbuilddeps.txt
 
 Python packages installed via pip in the build stage before building the
-service wheel. Typically just `pbr` for version detection:
+service wheel. Typically `pbr` for version detection and `wheel` for the
+bdist_wheel command:
 
 ```
 pbr
+wheel
 ```
 
 ### bindeps.txt
 
 List the runtime system packages (installed via microdnf in the final image), one
-per line, with comments explaining each:
+per line, with comments explaining each.
+
+**Every image must include `python3` and `python3-pip`** as base requirements:
 
 ```
-# <category>
+python3
+python3-pip
+# <additional packages>
 <package-name>
 ```
 
 Use the tcib YAML `tcib_packages` and the spec file `Requires:` as sources.
 Filter out:
-- `python3-*` packages (these go in pythondeps.txt or come via pip)
+- Most `python3-*` packages (these go in pythondeps.txt or come via pip)
 - `openstack-<service>-*` packages (replaced by pip install from source)
-- Packages already in the base image (dumb-init, sudo, python3, pip, etc.)
+- Packages already in the base image (dumb-init, sudo, etc.)
 
 Exception: system-level Python bindings that can only be installed via microdnf
-(e.g., `python3-libvirt`, `python3-mod_wsgi`) belong in bindeps.txt, not
-pythondeps.txt.
+(e.g., `python3-libvirt`, `python3-mod_wsgi`, `python3-cryptography`) belong
+in bindeps.txt, not pythondeps.txt. Note that packages listed as `python3-*`
+in bindeps.txt or builddeps.txt are automatically excluded from the
+pip-compile lockfile by `build.sh` to avoid version conflicts between RPM
+and pip-installed versions.
 
 ### pythondeps.txt
 
@@ -580,11 +622,46 @@ Present all generated files to the user for review. For each file, show:
 
 Ask the user to confirm before writing the files.
 
-## Step 11: Verification Checklist
+## Step 11: Run update-sources and check for RPM-provided packages
 
-After generating all files, run through this checklist **before presenting
-output to the user**. Each item must be explicitly verified — do not skip
-items or assume they are satisfied without checking.
+After the user confirms and files are written, run `build.sh update-sources`
+to generate the lockfile and pinned hashes:
+
+```bash
+STREAM=master ./build.sh update-sources <project>
+```
+
+Then check if `cryptography` appears in the generated lockfile:
+
+```bash
+grep -i '^cryptography==' containers/<project>/requirements.lock.master
+```
+
+If `cryptography` is present in the lockfile, it must be installed from RPM
+instead of pip (building it from source is slow and fragile). Add
+`python3-cryptography` to both `bindeps.txt` and `builddeps.txt` for every
+image in the project, then re-run `update-sources` so the RPM filtering
+strips it from the lockfile:
+
+```bash
+# For each image in the project:
+echo "python3-cryptography" >> containers/<project>/<image>/bindeps.txt
+echo "python3-cryptography" >> containers/<project>/<image>/builddeps.txt
+
+# Re-run to regenerate the lockfile without cryptography
+STREAM=master ./build.sh update-sources <project>
+
+# Verify it was removed
+grep -i '^cryptography==' containers/<project>/requirements.lock.master && \
+  echo "ERROR: cryptography still in lockfile" || \
+  echo "OK: cryptography excluded from lockfile"
+```
+
+## Step 12: Verification Checklist
+
+After writing all files, run through this checklist. Each item must be
+explicitly verified — do not skip items or assume they are satisfied
+without checking.
 
 ### Config files and build-stage generators
 
@@ -626,8 +703,10 @@ items or assume they are satisfied without checking.
 - [ ] **builddeps.txt** includes headers needed by Python deps with C
   extensions (check requirements.txt for lxml→libxml2-devel,
   cryptography→openssl-devel, etc.)
-- [ ] **bindeps.txt** includes all non-Python `Requires:` from the spec,
-  minus packages already in base image and minus `openstack-*` RPMs
+- [ ] **pythonbuilddeps.txt** includes both `pbr` and `wheel`
+- [ ] **bindeps.txt** always includes `python3` and `python3-pip`, plus
+  all non-Python `Requires:` from the spec, minus packages already in base
+  image and minus `openstack-*` RPMs
 - [ ] **pythondeps.txt** includes extras for oslo libraries used by the
   service (oslo.db→`oslo.db[mysql]`, oslo.cache→`oslo.cache[dogpile]`)
 - [ ] **API images** include httpd, mod_ssl, python3-mod_wsgi in bindeps.txt
@@ -662,6 +741,36 @@ was handled:
 | tcib watcher-api | `sed ... httpd.conf` | Reproduced in Containerfile |
 | ... | ... | ... |
 
+## Step 13: Test build
+
+Recommend the user to run a test build to verify the generated Containerfiles
+work end-to-end:
+
+```bash
+STREAM=master ./build.sh build <project>
+```
+
+This builds all images in the project. If only a specific image needs
+testing:
+
+```bash
+STREAM=master ./build.sh build <project>/<image>
+```
+
+Also test with `PIP_NO_BINARY=:all:` to verify the image can be built
+entirely from source:
+
+```bash
+STREAM=master PIP_NO_BINARY=":all:" ./build.sh build <project>
+```
+
+If the from-source build fails on a Rust-based package (e.g., `rpds-py`,
+`bcrypt`), ensure `rust` and `cargo` are in `builddeps.txt` and
+`ENV MATURIN_NO_INSTALL_RUST=true` is set in the Containerfile build stage.
+
+If either build fails, review the error output and fix the Containerfile or
+dependency files accordingly.
+
 ## Important Notes
 
 - Always use `--prefix=/usr` for pip install so binaries land at `/usr/bin/`
@@ -672,9 +781,15 @@ was handled:
   then `COPY <image>/src/ /src/`
 - Both `src/` directories must exist (even if empty with just `.gitkeep`)
   or the COPY will fail
+- Wheels are built into two directories: `/wheels/pkgs` (source packages)
+  and `/wheels/deps` (dependencies from the lockfile). All `pip3 install`
+  and `pip3 wheel` commands must use `--find-links=/wheels/deps` and
+  `--find-links=/wheels/pkgs` to resolve packages from both directories
 - All dep file installs must be conditional (handle empty files gracefully)
 - All four dep files (builddeps, pythonbuilddeps, bindeps, pythondeps)
   must always be present in the generated output, even if empty
+- `bindeps.txt` must always include `python3` and `python3-pip`
+- `pythonbuilddeps.txt` must always include `pbr` and `wheel`
 - All API service containers must include httpd, mod_ssl, python3-mod_wsgi
   in bindeps.txt
 - Do not duplicate packages already in the base image
@@ -684,6 +799,15 @@ was handled:
 - Constraints are per-project — each project's sources.txt defines its
   own upper-constraints entry, allowing different projects to track
   different OpenStack releases
+- `PIP_NO_BINARY` is an optional build arg (default empty). When set to
+  `:all:`, pip builds everything from source. The Containerfile must
+  declare `ARG PIP_NO_BINARY=""` and `ENV PIP_NO_BINARY=${PIP_NO_BINARY}`
+  in the build stage. When building from source, `rust` and `cargo` must
+  be in builddeps.txt, and `ENV MATURIN_NO_INSTALL_RUST=true` must be set
+  for Rust-based packages
+- `python3-*` packages in bindeps.txt or builddeps.txt are automatically
+  excluded from the pip-compile lockfile by `build.sh` to avoid version
+  conflicts between RPM and pip-installed versions
 - All remote fetches use `curl` against raw.githubusercontent.com — no
   `gh` CLI or authentication needed for public repos
 - If `curl` fails (404), try alternative file name patterns or use
