@@ -23,7 +23,8 @@ When generating containerfiles for a service, I will systematically:
 3. **Fetch the RDO spec file** to extract non-Python deps, config files,
    user/group setup, and file permissions
 4. **Fetch upstream requirements** to identify Python dependencies and
-   determine extra pip packages needed
+   determine extra pip packages needed; also identify any top-level
+   requirements the distgit strips, to reproduce as `excluded-requirements.txt`
 5. **Analyze consolidation** — group sub-services by dependency profile
    and propose which share an image vs get separate images
 6. **Analyze config files** — classify into upstream source, distgit, and
@@ -40,10 +41,12 @@ When generating containerfiles for a service, I will systematically:
 
 ## Step 1: Read the design document
 
-Fetch and read the container images design document. By default it is at:
+Fetch and read the container images design document and developer guide.
+By default it is at:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/openstack-k8s-operators/dev-docs/main/container-images-design.md
+curl -sL https://raw.githubusercontent.com/openstack-k8s-operators/s2i-openstack-containers/refs/heads/main/docs/design.md
+curl -sL https://raw.githubusercontent.com/openstack-k8s-operators/s2i-openstack-containers/refs/heads/main/docs/developer-guide.md
 ```
 
 If the user specifies a different location (local file path or URL), use
@@ -126,6 +129,87 @@ curl -sL https://raw.githubusercontent.com/openstack/<service>/master/requiremen
 ```
 
 This confirms what Python dependencies pip will install. Note any that have system-level (C library) dependencies requiring microdnf packages (e.g., `python-memcached` needs nothing, but `PyMySQL` needs `mariadb-connector-c-devel` at build time, `cryptography` needs `openssl-devel`).
+
+### Step 4a: Identify excluded requirements from the distgit spec
+
+Some distgit specs strip specific packages from the upstream `requirements.txt`
+during `%prep` — typically packages unused in RDO/our deployments that drag in a
+heavy transitive tree that must be compiled from source under
+`PIP_NO_BINARY=:all:` (e.g. the ceilometer spec drops `awscurl`, which pulls in
+`awscrt`, `boto3`, `s3transfer`, `configargparse`). Reproduce those exclusions so
+the generated images match the RDO dependency set.
+
+#### How RDO specs express this
+
+The canonical RDO convention is a `%global` macro holding the package list,
+applied by a loop in `%prep` that deletes each matching line from the **runtime**
+`requirements.txt`:
+
+```rpmspec
+%global excluded_reqs awscurl               # <- the runtime exclusion list
+
+# ... later, in %prep:
+# Exclude some unneeded runtime reqs
+for pkg in %{excluded_reqs}; do
+  sed -i /^${pkg}.*/d requirements.txt      # <- deletes each package from requirements.txt
+done
+```
+
+The `sed` deletes `${pkg}`, so the actual names live on the `%global` line, not
+the `sed` line — you must **resolve the macro** to get them. Grep for both, and
+for any other operation that edits `requirements.txt` in `%prep`:
+
+```bash
+# 1. Find edits to the RUNTIME requirements.txt in %prep (any sed / grep / rm form):
+grep -nE 'requirements\.txt' openstack-<service>.spec | grep -iE 'sed|grep|rm|remove'
+# 2. Resolve the macro(s) that loop feeds on:
+grep -nE '^%global[[:space:]]+excluded_reqs' openstack-<service>.spec
+```
+
+Consider **any** change to the runtime `requirements.txt`, not only the
+`excluded_reqs` loop — a spec may also strip a package with a literal
+`sed -i '/^somepkg/d' requirements.txt` or rewrite the file through `grep -v`.
+Collect every top-level package name removed by any such operation as a
+*candidate*.
+
+Scope this to the runtime `requirements.txt` only. Ignore edits to
+`doc/requirements.txt` and `test-requirements.txt` (usually driven by a separate
+`excluded_brs` macro) — those are build/test requirements, not runtime deps, and
+never feed `excluded-requirements.txt`. Scoping the grep to `requirements.txt`
+edits already excludes them, since that loop edits its files through a `$reqfile`
+variable rather than naming `requirements.txt` directly.
+
+#### Verify each candidate is still in the upstream requirements.txt
+
+The spec strip only removes a *line that exists*. Before excluding a candidate,
+confirm it is actually a top-level entry in the upstream `requirements.txt`
+fetched in Step 4:
+
+```bash
+grep -inE '^<candidate>' requirements.txt   # from openstack/<service>/master/requirements.txt
+```
+
+Keep a candidate only if `requirements.txt` still contains it as a direct
+requirement; drop it otherwise. This guards against stale spec macros — e.g.
+cloudkitty's spec lists `awscurl` in `excluded_brs`, but its runtime
+`requirements.txt` never contained `awscurl`, so cloudkitty needs **no**
+`excluded-requirements.txt`. The surviving candidates become the lines in
+`excluded-requirements.txt`.
+
+**Only top-level entries in the upstream `requirements.txt` can be excluded.**
+The strip is a line-delete against `requirements.txt`, so it removes a package
+only if that package is a *direct* requirement. Transitive dependencies (pulled
+in by another package, not listed in `requirements.txt`) must **not** be listed:
+they disappear on their own when their sole remaining parent was the excluded
+package, and are correctly kept when another live parent still needs them.
+Listing a transitive dependency here does nothing (its line is not in
+`requirements.txt`) — and if it somehow matched, deleting a genuinely-needed
+dependency yields a runtime `ImportError`. To fix a transitive you actually want
+gone, exclude its top-level parent instead.
+
+If the spec strips no requirements, the project needs no
+`excluded-requirements.txt`; omit both the file (Step 8) and the Containerfile
+exclusion block from every image.
 
 ## Step 5: Analyze consolidation
 
@@ -355,6 +439,31 @@ RUN cp /deps-upper-constraints.txt /tmp/build-constraints.txt && \
       fi; \
     done
 
+# --- Requirement exclusions (ONLY if the project ships excluded-requirements.txt) ---
+# Include the following two directives verbatim ONLY when
+# containers/<project>/excluded-requirements.txt exists; omit them entirely
+# otherwise. The COPY names the file directly with no existence check, and buildah
+# fails the COPY outright if the file is missing -- that is deliberate, the block
+# is added only to services that actually have an exclusion file. See
+# docs/excluding-requirements.md in the s2i-openstack-containers repo.
+#
+# Drop excluded upstream requirements before building the service wheel, so the
+# wheel's own metadata (Requires-Dist) cannot pull them back in at install time,
+# and a plain `buildah build` yields the same dependency set as update-sources.
+COPY excluded-requirements.txt /tmp/excluded-requirements.txt
+# Pre-strip comments, inline whitespace, and blank lines up front so the loop
+# iterates over one bare package name per line. POSIX sh only (buildah RUN uses
+# /bin/sh) -- no [[ ]], no ${var//}, no process substitution.
+RUN sed -e 's/#.*//' -e 's/[[:space:]]//g' -e '/^$/d' /tmp/excluded-requirements.txt | \
+    while IFS= read -r pkg; do \
+      for req in /src/*/requirements.txt /src/overrides/*/requirements.txt; do \
+        if [ -f "${req}" ]; then \
+          sed -i -E "/^${pkg}([[:space:]<>=!~;,#[]|\$)/Id" "${req}"; \
+        fi; \
+      done; \
+    done && \
+    rm /tmp/excluded-requirements.txt
+
 # Build wheels from source packages (project repos and overrides)
 RUN for pkg in /src/*/ /src/overrides/*/; do \
       if [ -d "${pkg}" ] && [ -f "${pkg}/setup.cfg" -o -f "${pkg}/setup.py" -o -f "${pkg}/pyproject.toml" ]; then \
@@ -547,6 +656,36 @@ To populate this, check:
   service's `requirements.txt`
 - The tcib YAML for any extra pip installs
 
+### excluded-requirements.txt (project-level — only if Step 4a found exclusions)
+
+If the distgit strips top-level requirements (Step 4a), create a single
+**project-level** file `containers/<project>/excluded-requirements.txt` listing
+one bare package name per line. This is *not* per-image — every image in the
+project shares it, and each image's Containerfile carries the exclusion block
+that reads it (see the build-stage template above).
+
+Include a comment explaining *why* each package is excluded — this file is the
+only record of the exclusion's intent:
+
+```
+# awscurl is not used in our deployments and pulls a heavy transitive tree
+# (awscrt, boto3, s3transfer, configargparse) that must otherwise be
+# compiled from source under PIP_NO_BINARY=:all:. The distgit drops it too.
+awscurl
+```
+
+Coupling to remember when this file exists:
+
+- Every image's Containerfile in the project must include the requirement
+  exclusion block (the `COPY excluded-requirements.txt` + `sed` loop shown in
+  the build-stage template). Conversely, if the file does *not* exist, that block
+  must be omitted from every Containerfile — the `COPY` fails the build if the
+  named file is missing.
+- The exclusion flushes into `requirements.lock.<stream>` /
+  `buildrequirements.lock.<stream>` on the next `update-sources` run (Step 11),
+  so there is no manual lockfile editing.
+- Only top-level `requirements.txt` entries can be excluded (see Step 4a).
+
 ## Step 9: Create sources.txt and directory structure
 
 ### 9a. Determine streams
@@ -711,6 +850,11 @@ without checking.
   service (oslo.db→`oslo.db[mysql]`, oslo.cache→`oslo.cache[dogpile]`)
 - [ ] **API images** include httpd, mod_ssl, python3-mod_wsgi in bindeps.txt
   and the Apache httpd setup block in the Containerfile
+- [ ] **Excluded requirements** from the distgit `%prep` (Step 4a) are all
+  top-level `requirements.txt` entries, listed in
+  `containers/<project>/excluded-requirements.txt`, and **either** that file
+  exists *and* every image's Containerfile carries the exclusion block, **or**
+  the file does not exist *and* no Containerfile references it
 
 ### Structure and sources
 
