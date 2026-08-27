@@ -1,6 +1,6 @@
 # openstack-k8s-operators Operator Tools
 
-Claude Code plugin for [openstack-k8s-operators](https://github.com/openstack-k8s-operators/) development — debugging, testing, code review, feature planning, and plan execution.
+Skills for [openstack-k8s-operators](https://github.com/openstack-k8s-operators/) development — debugging, testing, code review, feature planning, and plan execution. Supports Claude Code, Cursor, OpenCode, and Codex.
 
 [![asciicast](https://asciinema.org/a/886205.svg)](https://asciinema.org/a/886205)
 
@@ -54,6 +54,34 @@ cd openstack-k8s-agent-tools
 make install-opencode
 ```
 
+### Codex
+
+Start Codex and ask its built-in skill installer to install this repository:
+
+```text
+$skill-installer Install all skills from https://github.com/openstack-k8s-operators/devskills
+```
+
+Codex detects newly installed skills automatically. If they do not appear,
+restart Codex. Run `/skills` or type `$` in the prompt to select a skill.
+
+For example, select `openstack-k8s-agent-tools:code-review`, then provide its
+arguments:
+
+```text
+$openstack-k8s-agent-tools:code-review 438
+```
+To use a skill in codex, use `$`, not `/`. For example:
+```
+› /jira OSPRH-35190
+
+• Unrecognized command '/jira'. Type "/" for a list of supported commands.
+
+› $jira OSPRH-35190
+
+• I’m using the Jira skill to inspect OSPRH-35190 and validate its hierarchy. I’ll make no Jira changes.
+```
+
 ### Manual install (Claude Code, without marketplace)
 
 ```bash
@@ -72,6 +100,9 @@ make install-claude
 | gosec, govulncheck | Optional | Security scanning in `/test-operator security` |
 
 ## Skills
+
+The table uses Claude Code's `/skill-name` notation. In Codex, run `/skills`
+or type `$` and select the corresponding `openstack-k8s-agent-tools` skill.
 
 | Skill | Agent | Purpose |
 |-------|-------|---------|

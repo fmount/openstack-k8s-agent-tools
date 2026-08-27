@@ -76,6 +76,26 @@ claude mcp add-json "mcp-atlassian" \
 
 Note: OpenCode requires the `"type": "stdio"` field in MCP server definitions.
 
+**Codex** — Add the atlassian MCP to codex:
+```
+codex mcp add atlassian \
+    --env JIRA_URL=https://redhat.atlassian.net/ \
+    --env "JIRA_USERNAME=$EMAIL" \
+    --env "JIRA_API_TOKEN=$TOKEN" \
+    --env CONFLUENCE_URL=https://redhat.atlassian.net/wiki \
+    --env "CONFLUENCE_USERNAME=$EMAIL" \
+    --env "CONFLUENCE_API_TOKEN=$TOKEN" \
+    -- /usr/bin/podman run -i --rm \
+    -e JIRA_URL -e JIRA_USERNAME -e JIRA_API_TOKEN \
+    -e CONFLUENCE_URL -e CONFLUENCE_USERNAME -e CONFLUENCE_API_TOKEN \
+    ghcr.io/sooperset/mcp-atlassian:latest
+```
+Confirm it was registered:
+```
+codex mcp get atlassian
+codex mcp list
+```
+
 ### Read-Only Mode
 
 Set `READ_ONLY_MODE` to `"true"` when you only need to read tickets (recommended for `/feature` planning). Set to `"false"` if you want `/jira` or `/task-executor` to post comments back to Jira.
