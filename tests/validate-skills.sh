@@ -37,7 +37,7 @@ check() {
 
 get_frontmatter() {
     local file="$1"
-    sed -n '2,/^---$/p' "$file" | head -n -1
+    sed -n '2,/^---$/p' "$file" | sed '$d'
 }
 
 has_field() {
