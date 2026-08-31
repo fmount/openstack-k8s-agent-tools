@@ -18,7 +18,7 @@ claude plugin install openstack-k8s-agent-tools
 To update to the latest version:
 
 ```bash
-claude plugin update openstack-k8s-agent-tools
+claude plugin update openstack-k8s-agent-tools@openstack-k8s-agent-tools
 ```
 
 ### Cursor
