@@ -11,6 +11,22 @@ claude plugin install openstack-k8s-agent-tools
 make install-claude
 ```
 
+For Codex, start Codex and use its built-in skill installer:
+
+```text
+$skill-installer Install all skills from https://github.com/openstack-k8s-operators/devskills
+```
+
+Codex detects newly installed skills automatically. Restart Codex if they do
+not appear. Run `/skills` or type `$` to select a skill. For example:
+
+```text
+$openstack-k8s-agent-tools:code-review 438
+```
+
+The examples below use Claude Code's `/skill-name` notation. In Codex, select
+the corresponding `openstack-k8s-agent-tools` skill with `$` instead.
+
 ## Skills Quick Reference
 
 | Skill | Usage | Purpose |

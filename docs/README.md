@@ -68,7 +68,12 @@ Architecture and design decisions behind the plugin:
 
 ## Troubleshooting
 
-**Skills not showing**: Ensure in `.claude/skills/` and restart Claude
+**Skills not showing in Claude Code**: Ensure they are in `.claude/skills/`
+and restart Claude Code.
+
+**Skills not showing in Codex**: Run `/skills` or type `$` to check the skill
+selector, then restart Codex. If the skills are still absent, invoke
+`$skill-installer` again with the repository URL from the installation guide.
 
 **Make targets fail**: Verify in operator directory with Makefile
 
