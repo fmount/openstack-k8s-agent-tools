@@ -17,9 +17,9 @@ context: fork
 
 - Even if you have tools like `oc` or `ssh` available, don't do direct cluster examination during the analysis. Stick to just analyzing the files in the must-gather report. If you find that it would be useful to have some more information, which is missing from the report but could be obtained by directly inspecting OpenShift or OpenStack or the underlying servers, highlight that in your analysis.
 
-- Match LLM context usage with the severity of the issue being investigated. Investigate serious problems first. If a problem looks serious, feel free to use more effort in investigating it. If an error is transient or of low severity, still make a note in your analysis but don't spend too much effort on hunting down the root cause.
-
 - You MUST NOT use any command whose purpose is to communicate over network.
+
+- If you have a TODO-like tool available, use it to keep track of steps to do.
 
 - The analysis you produce should include paths to relevant files so that the analysis can be independently verified or continued further from where you left off.
 
@@ -31,19 +31,17 @@ context: fork
 
 - There may be "sos reports" (logs and troubleshooting command outputs) from OpenStack data plane nodes (e.g. compute nodes) and OCP nodes under `sos-reports/_all_nodes` directory. You may need to extract them from .tar.xz files. The compute node sos reports tend to be useful when investigating problems affecting OpenStack virtual machines and services on the data plane.
 
+- There can be short transient error states -- this is often ok and expected for convergence-oriented deployment/update processes where many things happen in parallel. If an error happens for a short while and then stops happening (service recovers and progresses further) then it's quite likely it's not a symptom of a problem.
+
 ## Analysis workflow
 
 1. Locate the must-gather report. If it's tarballed, extract it. Do not do too many `ls` calls to understand the structure of the report yet, it is big with many subdirectories.
 
 2. Scan the report for signs of problems with tools like `grep` or `ripgrep`. The words to look for include but may not be limited to "error", "fail", "failure", "fatal", "restart".
 
-3. If the problem scan highlighted obvious problems, read more info to help understand the problem and its cause better (larger file chunks or whole files). Get to the root cause, but even if that doesn't seem possible, gathering more clues is still valuable. (Feel free to use `ls` more than in step 1, in case it seems helpful.)
+3. Try to find the root cause of the main problem, not just symptoms. If that doesn't seem possible, gathering more clues is still helpful.
 
-4. If the previous steps didn't yield any obvious problems, repeat the step "scan the report for signs of problems" but widen the search to words like "warn", "warning". If that yields something, do the step "read more info to help understand the problem".
-
-5. Don't just settle for finding symptoms — find the possible root causes of the main problems.
-
-6. Output a structured analysis of the problems observed in the must-gather report. Start with the most severe issues first. Don't forget to cite relevant file paths in your analysis.
+4. Output a structured analysis of the observed problems and ideally also their causes. Focus primarily on the most severe issues. Don't forget to cite relevant file paths in your analysis.
 
 ## RHOSO-Specialized Triage (optional)
 
